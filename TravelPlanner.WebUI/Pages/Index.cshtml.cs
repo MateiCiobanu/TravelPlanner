@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -6,19 +7,16 @@ namespace TravelPlanner.WebUI.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<IndexModel> _logger;
 
-        public string MessageFromApi { get; set; } = "Click the button to fetch data.";
-
-        public IndexModel(IHttpClientFactory httpClientFactory)
+        public IndexModel(ILogger<IndexModel> logger)
         {
-            _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
-        public async Task OnPostFetchData()
+        public void OnGet()
         {
-            var client = _httpClientFactory.CreateClient();
-            MessageFromApi = await client.GetStringAsync("http://localhost:5192/api/hello");
+
         }
     }
 }

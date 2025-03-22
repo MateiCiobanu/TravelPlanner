@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace TravelPlanner.API.Controllers
 {
     [ApiController]
-    [Route("")]
+    [Route("/aedsfsf    ")]
     public class HelloController : ControllerBase
     {
         [HttpGet]
