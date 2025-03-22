@@ -1,0 +1,13 @@
+GET http://localhost:5216/trips
+
+###
+GET http://localhost:5216/accounts
+
+###
+GET http://localhost:5216/quizzes
+
+###
+GET http://localhost:5216/account/3/quiz
+
+###
+GET http://localhost:5216/museums

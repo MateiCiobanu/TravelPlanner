@@ -1,0 +1,9 @@
+@page
+@model TravelPlanner.WebUI.Pages.IndexModel
+
+<h1>Home Page</h1>
+<p>@Model.MessageFromApi</p>
+
+<form method="post">
+    <button type="submit" asp-page-handler="FetchData">Fetch Data from API</button>
+</form>

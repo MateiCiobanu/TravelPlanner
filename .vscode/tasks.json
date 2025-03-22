@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start API",
+            "command": "dotnet",
+            "args": ["run", "--project", "TravelPlanner.API/TravelPlanner.API.csproj"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Start WebUI",
+            "command": "dotnet",
+            "args": ["run", "--project", "TravelPlanner.WebUI/TravelPlanner.WebUI.csproj"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Run Both API & WebUI",
+            "dependsOn": ["Start API", "Start WebUI"],
+            "problemMatcher": []
+        }
+    ]
+}
