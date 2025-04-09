@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+TravelPlanner.API/appsettings.json
+TravelPlanner.WebUI/appsettings.json

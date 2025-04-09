@@ -10,9 +10,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using TravelPlanner.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -35,6 +37,9 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+builder.Services.AddHttpClient<GooglePlacesService>();
+builder.Services.AddHttpClient<GooglePlacesService>();
 
 var app = builder.Build();
 
