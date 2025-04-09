@@ -1,21 +1,57 @@
-// var builder = WebApplication.CreateBuilder(args);
-// var app = builder.Build();
-
-// app.MapGet("/", () => "Hello World!");
-
-// app.Run();
-
-
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
+using System.Text;
+using TravelPlanner.Application.Common.Mapping;
+using TravelPlanner.Domain.Interfaces;
+using TravelPlanner.Infrastructure.Persistence;
+using TravelPlanner.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
+builder.Services.AddAutoMapper(typeof(Mapping).Assembly);
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Description = "Standard Authorization header using the Bearer scheme (\"bearer {token}\")",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                .GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+    });
+});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
