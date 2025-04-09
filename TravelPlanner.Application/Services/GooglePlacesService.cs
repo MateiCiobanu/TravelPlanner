@@ -1,22 +1,24 @@
 using TravelPlanner.Application.DTOs;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace TravelPlanner.Application.Services;
 
 public class GooglePlacesService
 {
     private readonly HttpClient _httpClient;
-    private const string ApiKey = "AIzaSyBcWFBjVShy_n8fw0Jv5WqArQVtqCmnhfQ";
+    private readonly string? _apiKey;
 
-    public GooglePlacesService(HttpClient httpClient)
+    public GooglePlacesService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
+        _apiKey = configuration["GooglePlaces:ApiKey"]; 
     }
 
     public async Task<List<PlaceDto>> GetPlacesAsync(string category, string location)
     {
-        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={category}+in+{location}&key={ApiKey}";
+        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={category}+in+{location}&key={_apiKey}";
         var response = await _httpClient.GetFromJsonAsync<JsonElement>(url);
 
         var places = new List<PlaceDto>();
@@ -44,16 +46,16 @@ public class GooglePlacesService
 
     public async Task<PlaceDetailsDto> GetPlaceDetailedInfoAsync(string place_id)
     {
-        var url = $"https://places.googleapis.com/v1/places/{place_id}?languageCode=en&key={ApiKey}";
+        var url = $"https://places.googleapis.com/v1/places/{place_id}?languageCode=en&key={_apiKey}";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("X-Goog-FieldMask", "*");
 
         var httpResponse = await _httpClient.SendAsync(request);
-        httpResponse.EnsureSuccessStatusCode(); 
+        httpResponse.EnsureSuccessStatusCode();
 
         var jsonResponse = await httpResponse.Content.ReadFromJsonAsync<JsonElement>();
-    
+
         var location = jsonResponse.GetProperty("location");
 
         var details = new PlaceDetailsDto(
@@ -70,7 +72,7 @@ public class GooglePlacesService
                 Latitude: location.GetProperty("latitude").GetDouble(),
                 Longitude: location.GetProperty("longitude").GetDouble()
             ),
-            OpeningHours:   jsonResponse.TryGetProperty("regularOpeningHours", out var openingHours) && 
+            OpeningHours: jsonResponse.TryGetProperty("regularOpeningHours", out var openingHours) &&
                             openingHours.TryGetProperty("weekdayDescriptions", out var descriptions)
                             ? descriptions.EnumerateArray().Select(d => d.GetString() ?? "").ToList()
                             : new List<string>()
