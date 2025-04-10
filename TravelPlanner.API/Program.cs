@@ -7,12 +7,16 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using TravelPlanner.Application.Common.Mapping;
+using TravelPlanner.Application.Services;
 using TravelPlanner.Domain.Interfaces;
 using TravelPlanner.Infrastructure.Persistence;
 using TravelPlanner.Infrastructure.Repositories;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(Mapping).Assembly);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -71,6 +75,9 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+builder.Services.AddHttpClient<GooglePlacesService>();
+builder.Services.AddHttpClient<GooglePlacesService>();
 
 var app = builder.Build();
 

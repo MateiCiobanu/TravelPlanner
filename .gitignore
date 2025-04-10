@@ -484,3 +484,6 @@ $RECYCLE.BIN/
 *.swp
 TravelPlanner.API/appsettings.json
 *.json
+TravelPlanner.API/appsettings.Development.json
+TravelPlanner.WebUI/appsettings.Development.json
+**/appsettings.Development.json
