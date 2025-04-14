@@ -8,6 +8,8 @@ namespace TravelPlanner.Infrastructure.Persistence
         public DataContext(DbContextOptions<DataContext> options) : base(options){}
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Trip> Trips { get; set; }
+        public DbSet<ItineraryItem> ItineraryItems { get; set; }
 
     }
 }

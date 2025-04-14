@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\TravelPlanner.Application\TravelPlanner.Application.csproj" />
     <ProjectReference Include="..\TravelPlanner.Infrastructure\TravelPlanner.Infrastructure.csproj" />
+    <ProjectReference Include="..\TravelPlanner.WebUI\TravelPlanner.WebUI.csproj" />
+
   </ItemGroup>
 
   <ItemGroup>
@@ -13,6 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />

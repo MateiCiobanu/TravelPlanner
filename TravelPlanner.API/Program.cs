@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.FileProviders;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +13,7 @@ using TravelPlanner.Application.Services;
 using TravelPlanner.Domain.Interfaces;
 using TravelPlanner.Infrastructure.Persistence;
 using TravelPlanner.Infrastructure.Repositories;
+using TravelPlanner.WebUI;
 
 
 
@@ -18,13 +21,35 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddApplicationPart(typeof(TravelPlanner.WebUI.Controllers.ItineraryViewController).Assembly);
 builder.Services.AddAutoMapper(typeof(Mapping).Assembly);
+
+// Repository registration
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITripRepository, TripRepository>();
+builder.Services.AddScoped<IItineraryItemRepository, ItineraryItemRepository>();
+
+builder.Services.AddLogging();
+
+
+builder.Services.AddScoped<ItinerarySuggestionService>();
+builder.Services.AddScoped<ItineraryViewModelMapper>();
+
+
+
 builder.Services.AddEndpointsApiExplorer();
+
+
+// Database
 builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
@@ -88,9 +113,24 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();  
+var webUIPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "TravelPlanner.WebUI", "wwwroot");
+if (Directory.Exists(webUIPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(webUIPath),
+        RequestPath = ""
+    });
+}
+app.UseRouting();    
 app.UseCors("AllowAll");
 app.UseAuthorization();
-app.MapControllers();
 
+
+app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
