@@ -20,6 +20,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(Mapping).Assembly);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITravelerTypeRepository, TravelerTypeRepository>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<DataContext>(options =>
 {

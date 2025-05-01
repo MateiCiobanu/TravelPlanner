@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TravelPlanner.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TravelPlanner.Infrastructure.Persistence;
 namespace TravelPlanner.Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250429190121_Created-DB")]
+    partial class CreatedDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,7 +64,7 @@ namespace TravelPlanner.Infrastructure.Migrations
 
                     b.HasIndex("TripId");
 
-                    b.ToTable("ItineraryItems");
+                    b.ToTable("ItineraryItem");
                 });
 
             modelBuilder.Entity("TravelPlanner.Domain.Entities.TravelerType", b =>
@@ -86,7 +89,7 @@ namespace TravelPlanner.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TravelerTypes");
+                    b.ToTable("TravelerType");
                 });
 
             modelBuilder.Entity("TravelPlanner.Domain.Entities.Trip", b =>
@@ -122,7 +125,7 @@ namespace TravelPlanner.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Trips");
+                    b.ToTable("Trip");
                 });
 
             modelBuilder.Entity("TravelPlanner.Domain.Models.User", b =>

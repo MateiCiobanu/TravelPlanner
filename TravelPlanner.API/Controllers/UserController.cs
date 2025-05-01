@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using TravelPlanner.Application.DTOs;
+using TravelPlanner.Domain.Entities;
 using TravelPlanner.Domain.Interfaces;
 using TravelPlanner.Domain.Models;
 
@@ -17,14 +18,16 @@ namespace TravelPlanner.API.Controllers
     public class UserController : Controller
     {
         private readonly IUserRepository _userRepository;
+        private readonly ITravelerTypeRepository _travelerTypeRepository;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
-        public UserController(IUserRepository userRepository, IConfiguration configuration, IMapper mapper)
+        public UserController(IUserRepository userRepository, IConfiguration configuration, IMapper mapper, ITravelerTypeRepository travelerTypeRepository)
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _mapper = mapper;
+            _travelerTypeRepository = travelerTypeRepository;
         }
 
         [HttpPost("register")]
@@ -35,7 +38,7 @@ namespace TravelPlanner.API.Controllers
                 if (userDto == null)
                     return BadRequest(ModelState);
 
-                var user = await _userRepository.GetUserByUsername(userDto.UserName);
+                var user = await _userRepository.GetUserByEmail(userDto.Email);
 
                 if (user != null)
                 {
@@ -52,10 +55,24 @@ namespace TravelPlanner.API.Controllers
                 userMap.PasswordHash = passwordHash;
                 userMap.PasswordSalt = passwordSalt;
 
+
                 if (!await _userRepository.CreateUser(userMap))
                 {
-                    ModelState.AddModelError("", "Something went wrong while savin");
+                    ModelState.AddModelError("", "Something went wrong while saving user");
                     return StatusCode(500, ModelState);
+                }
+
+                foreach(TravelerTypeCreateDTO type in userDto.TravelerTypes)
+                {
+                    var travelerType = new TravelerType();
+                    travelerType.TravelerTypeName = type.TravelerTypeName;
+                    travelerType.PreferenceWeight = type.PreferenceWeight;
+                    travelerType.UserId = userMap.Id;
+                    if (!await _travelerTypeRepository.CreateTravelerType(travelerType))
+                    {
+                        ModelState.AddModelError("", "Something went wrong while saving travelerType");
+                        return StatusCode(500, ModelState);
+                    }
                 }
 
                 return Ok("Successfully created");
@@ -71,7 +88,7 @@ namespace TravelPlanner.API.Controllers
         {
             try
             {
-                User user = await _userRepository.GetUserByUsername(request.UserName);
+                User user = await _userRepository.GetUserByEmail(request.Email);
                 if (user == null)
                 {
                     return BadRequest("User not found.");
