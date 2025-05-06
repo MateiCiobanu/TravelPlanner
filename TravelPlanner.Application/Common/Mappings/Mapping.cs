@@ -8,7 +8,10 @@ namespace TravelPlanner.Application.Common.Mapping
     {
         public Mapping()
         {
-            CreateMap<UserCreateDTO, User>();
+            CreateMap<UserCreateDTO, User>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.TravelerTypes, opt => opt.Ignore()); ;
         }
     }
 }

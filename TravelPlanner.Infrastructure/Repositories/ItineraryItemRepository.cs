@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace TravelPlanner.Infrastructure.Repositories
         {
             _context = context;
         }
+
 
         public async Task<IEnumerable<ItineraryItem>> GetByTripIdAsync(int tripId)
         {

@@ -1,8 +1,8 @@
- using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
- namespace TravelPlanner.Domain.Models
+namespace TravelPlanner.Domain.Models
 {
  public class ItineraryItem
     {
