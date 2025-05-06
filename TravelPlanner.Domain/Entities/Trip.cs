@@ -1,24 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TravelPlanner.Domain.Models;
 
-namespace TravelPlanner.Domain.Entities
+ using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+ namespace TravelPlanner.Domain.Models
 {
-    public class Trip
+ public class Trip
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public User User { get; set; }
+        
+        [Required]
+        [StringLength(100)]
         public string Title { get; set; }
+        
+        [Required]
+        [StringLength(100)]
         public string Destination { get; set; }
+        
+        [Required]
         public DateTime StartDate { get; set; }
+        
+        [Required]
         public DateTime EndDate { get; set; }
+        
+        [StringLength(20)]
         public string Status { get; set; } = "planning";
-        public ICollection<ItineraryItem> ItineraryItems { get; set; }
+        
+        // Navigation properties
+        public virtual User User { get; set; }
+        public virtual ICollection<ItineraryItem> ItineraryItems { get; set; }
     }
+
 }

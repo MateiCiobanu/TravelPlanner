@@ -2,6 +2,7 @@ using TravelPlanner.Application.DTOs;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace TravelPlanner.Application.Services;
 
@@ -9,36 +10,43 @@ public class GooglePlacesService
 {
     private readonly HttpClient _httpClient;
     private readonly string? _apiKey;
+  private readonly ILogger<ItinerarySuggestionService> _logger;
 
-    public GooglePlacesService(HttpClient httpClient, IConfiguration configuration)
+
+    public GooglePlacesService(HttpClient httpClient, IConfiguration configuration
+)
     {
         _httpClient = httpClient;
         _apiKey = configuration["GooglePlaces:ApiKey"]; 
+
+
     }
 
-    public async Task<List<PlaceDto>> GetPlacesAsync(string category, string location)
+    public async Task<List<PlaceDto>> GetPlacesAsync(string query, string location)
     {
-        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={category}+in+{location}&key={_apiKey}";
-        var response = await _httpClient.GetFromJsonAsync<JsonElement>(url);
+          query = Uri.EscapeDataString(query);
+        location = Uri.EscapeDataString(location);
+        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&location={location}&radius=50000&key={_apiKey}";
 
+        var response = await _httpClient.GetFromJsonAsync<JsonElement>(url);
         var places = new List<PlaceDto>();
 
         foreach (var result in response.GetProperty("results").EnumerateArray())
         {
-            places.Add(new PlaceDto(
-                Name: result.GetProperty("name").GetString() ?? "Unknown",
-                PlaceId: result.GetProperty("place_id").GetString() ?? "",
-                Address: result.GetProperty("formatted_address").GetString() ?? "",
-                PhoneNumber: null,
-                Website: null,
-                Rating: result.TryGetProperty("rating", out var rating) ? rating.GetDouble() : 0,
-                UserRatingsTotal: result.TryGetProperty("user_ratings_total", out var urt) ? urt.GetInt32() : 0,
-                GoogleMapsUrl: $"https://www.google.com/maps/place/?q=place_id:{result.GetProperty("place_id").GetString()}",
-                Location: new LocationDto(
-                    Latitude: result.GetProperty("geometry").GetProperty("location").GetProperty("lat").GetDouble(),
-                    Longitude: result.GetProperty("geometry").GetProperty("location").GetProperty("lng").GetDouble()
-                )
-            ));
+                    places.Add(new PlaceDto
+            {
+                Name = result.GetProperty("name").GetString() ?? "Unknown",
+                PlaceId = result.GetProperty("place_id").GetString() ?? "",
+                Address = result.GetProperty("formatted_address").GetString() ?? "",
+                Website = null,
+                FormattedPhoneNumber = null,
+                Rating = result.TryGetProperty("rating", out var rating) ? rating.GetDouble() : 0,
+                Latitude = result.GetProperty("geometry").GetProperty("location").GetProperty("lat").GetDouble(),
+                Longitude = result.GetProperty("geometry").GetProperty("location").GetProperty("lng").GetDouble(),
+                Types = new List<string>(), // or get it from result if available
+                OpeningHours = new List<string>(), // same here
+            });
+
         }
 
         return places;
