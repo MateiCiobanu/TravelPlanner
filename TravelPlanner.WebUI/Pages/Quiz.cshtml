@@ -1,0 +1,323 @@
+@page
+@model TravelPlanner.WebUI.Pages.IndexModel
+@{
+    ViewData["Title"] = "Quiz Page";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Travel Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 5vh 5vw;
+      overflow: hidden;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    .back-top-left {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      z-index: 2;
+    }
+
+    .back-top-left:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .quiz-container {
+      position: relative;
+      z-index: 1;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 3rem 4rem;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 100%;
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .question {
+      display: none;
+      margin-bottom: 2rem;
+    }
+
+    .question.active {
+      display: block;
+    }
+
+    .question p {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 300;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      margin-right: 0.8rem;
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="quiz-container">
+    <h1>Travel Preferences Quiz</h1>
+    <form id="quizForm">
+        <div class="question active" data-question="1">
+          <p>1. What’s your main goal for this trip?</p>
+          <label><input type="radio" name="goal" value="relax" />To relax and enjoy peaceful surroundings</label>
+          <label><input type="radio" name="goal" value="culture" />To explore history and culture</label>
+          <label><input type="radio" name="goal" value="vibes" />To have fun and experience local vibes</label>
+          <label><input type="radio" name="goal" value="nature" />To be active and spend time in nature</label>
+          <label><input type="radio" name="goal" value="food" />To enjoy food and culinary experiences</label>
+          <label><input type="radio" name="goal" value="nightlife" />To enjoy nightlife and go out in the evenings</label>
+        </div>
+      
+        <div class="question" data-question="2">
+          <p>2. What types of places do you enjoy most?</p>
+          <label><input type="radio" name="places" value="landmarks" />Historical buildings and landmarks</label>
+          <label><input type="radio" name="places" value="parks" />Parks, gardens, or natural landscapes</label>
+          <label><input type="radio" name="places" value="cafes" />Local restaurants and cafes</label>
+          <label><input type="radio" name="places" value="museums" />Museums and galleries</label>
+          <label><input type="radio" name="places" value="markets" />Markets, shops, or busy city streets</label>
+          <label><input type="radio" name="places" value="bars" />Bars, pubs, and nightlife areas</label>
+        </div>
+      
+        <div class="question" data-question="3">
+          <p>3. How many hours a day would you like to spend visiting places?</p>
+          <label><input type="radio" name="hours" value="0-1" />0–1 hour (I just want to vibe and take it slow)</label>
+          <label><input type="radio" name="hours" value="1-2" />1–2 hours (very relaxed)</label>
+          <label><input type="radio" name="hours" value="3-5" />3–5 hours (balanced)</label>
+          <label><input type="radio" name="hours" value="6-8" />6–8 hours (active and curious)</label>
+          <label><input type="radio" name="hours" value="9+" />9+ hours (explore as much as possible)</label>
+          <label><input type="radio" name="hours" value="depends" />I’ll see how I feel once I’m there</label>
+        </div>
+      
+        <div class="question" data-question="4">
+          <p>4. What type of activities do you usually enjoy more?</p>
+          <label><input type="radio" name="activity" value="indoor" />Mostly indoor (museums, cafes, galleries)</label>
+          <label><input type="radio" name="activity" value="outdoor" />Mostly outdoor (parks, walking, markets)</label>
+          <label><input type="radio" name="activity" value="mixed" />A mix of both</label>
+          <label><input type="radio" name="activity" value="weather" />Depends on the weather</label>
+          <label><input type="radio" name="activity" value="social" />Social stuff — anything involving people</label>
+          <label><input type="radio" name="activity" value="solo" />Solo experiences or quiet personal time</label>
+        </div>
+      
+        <div class="question" data-question="5">
+          <p>5. What’s your total daily budget for food and attractions?</p>
+          <label><input type="radio" name="budget" value="under50" />Under €50 (budget-friendly)</label>
+          <label><input type="radio" name="budget" value="50-100" />€50–€100 (moderate)</label>
+          <label><input type="radio" name="budget" value="100-200" />€100–€200 (comfortable)</label>
+          <label><input type="radio" name="budget" value="over200" />Over €200 (no budget limit)</label>
+          <label><input type="radio" name="budget" value="nobudget" />I don’t budget, I just follow vibes</label>
+          <label><input type="radio" name="budget" value="planner" />I track every euro, I’m a planner</label>
+        </div>
+      
+        <div class="question" data-question="6">
+          <p>6. How does an ideal day look like in a new city?</p>
+          <label><input type="radio" name="day" value="cafe" />Find a cozy cafe, chill, and people-watch</label>
+          <label><input type="radio" name="day" value="museums" />Hit up museums and historical sites</label>
+          <label><input type="radio" name="day" value="dish" />Try the most famous local dish</label>
+          <label><input type="radio" name="day" value="wander" />Wander aimlessly, explore shops and street corners</label>
+          <label><input type="radio" name="day" value="trail" />Head straight to the closest trail or park</label>
+          <label><input type="radio" name="day" value="party" />Take a nap, then party all night</label>
+        </div>
+      
+        <div class="question" data-question="7">
+          <p>7. How do you usually pick where to eat while traveling?</p>
+          <label><input type="radio" name="eat" value="relaxing" />Something relaxing and ambient</label>
+          <label><input type="radio" name="eat" value="local" />Local specialties, I want authenticity</label>
+          <label><input type="radio" name="eat" value="trendy" />Trendy places I saw on Instagram</label>
+          <label><input type="radio" name="eat" value="historic" />Culturally significant or historic spots</label>
+          <label><input type="radio" name="eat" value="trail" />Whatever’s near my hiking trail</label>
+          <label><input type="radio" name="eat" value="vibes" />Anywhere with booze, music, and vibes</label>
+        </div>
+      
+        <div class="question" data-question="8">
+          <p>8. What do you prioritize when choosing a destination?</p>
+          <label><input type="radio" name="priority" value="relax" />Relaxation + good vibes</label>
+          <label><input type="radio" name="priority" value="culture" />Culture, history, and depth</label>
+          <label><input type="radio" name="priority" value="cuisine" />Local cuisine</label>
+          <label><input type="radio" name="priority" value="shopping" />Buzz, shopping, aesthetics</label>
+          <label><input type="radio" name="priority" value="nature" />Nature and open spaces</label>
+          <label><input type="radio" name="priority" value="nightlife" />Vibrant nightlife</label>
+        </div>
+      
+        <div class="question" data-question="9">
+          <p>9. If your friends planned your trip for you, what would you hope they’d include?</p>
+          <label><input type="radio" name="friends" value="wellness" />A wellness day with a view and no stress</label>
+          <label><input type="radio" name="friends" value="culture" />A deep dive into the city’s culture and stories</label>
+          <label><input type="radio" name="friends" value="cooking" />A tasting tour or cooking class with locals</label>
+          <label><input type="radio" name="friends" value="street" />Street exploration and quirky shopping stops</label>
+          <label><input type="radio" name="friends" value="hike" />A scenic hike or nature getaway</label>
+          <label><input type="radio" name="friends" value="party" />Late nights full of music and madness</label>
+        </div>
+      
+        <div class="question" data-question="10">
+          <p>10. What’s the vibe you want to feel on your way home?</p>
+          <label><input type="radio" name="vibe" value="peaceful" />Recharged and peaceful, like I went on a soul retreat</label>
+          <label><input type="radio" name="vibe" value="smarter" />Smarter, more cultured, full of new stories to tell</label>
+          <label><input type="radio" name="vibe" value="stuffed" />Stuffed, satisfied, and inspired to cook weird new things</label>
+          <label><input type="radio" name="vibe" value="finds" />Loaded with cool finds and wild photo dumps</label>
+          <label><input type="radio" name="vibe" value="sunburn" />Energized, strong, a little sunburned but alive</label>
+          <label><input type="radio" name="vibe" value="hungover" />Exhausted, hungover, and would do it all again</label>
+        </div>
+      </form>
+      
+    
+      <div class="button-container">
+        <button type="button" id="nextBtn">Next</button>
+      </div>
+  </div>
+
+  <script>
+    history.pushState({}, '', 'quiz.html');
+  
+    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    const preloadImage = new Image();
+      preloadImage.src = randomImage;
+        preloadImage.onload = () => {
+    document.body.style.backgroundImage = `url('${randomImage}')`;
+   }; 
+  
+    const form = document.getElementById("quizForm");
+    const questions = document.querySelectorAll(".question");
+    const nextBtn = document.getElementById("nextBtn");
+    let current = 0;
+  
+    function showQuestion(index) {
+      questions.forEach((q, i) => {
+        q.classList.toggle("active", i === index);
+      });
+  
+      nextBtn.textContent = index === questions.length - 1 ? "Register" : "Next";
+  
+
+      const inputs = questions[index].querySelectorAll("input");
+      inputs.forEach(input => {
+        const name = input.name;
+        const value = input.value;
+        if (input.type === "radio") {
+          input.checked = form[name]?.value === value;
+        }
+        if (input.type === "checkbox") {
+          const checkedValues = Array.from(form.querySelectorAll(`input[name='${name}']:checked`)).map(el => el.value);
+          input.checked = checkedValues.includes(value);
+        }
+      });
+    }
+  
+    nextBtn.addEventListener("click", () => {
+      if (current === questions.length - 1) {
+        localStorage.setItem("quiz_1", form.goal.value);
+        localStorage.setItem("quiz_2", form.places.value);
+        localStorage.setItem("quiz_3", form.hours.value);
+        localStorage.setItem("quiz_4", form.activity.value);
+        localStorage.setItem("quiz_5", form.budget.value);
+        localStorage.setItem("quiz_6", form.day.value);
+        localStorage.setItem("quiz_7", form.eat.value);
+        localStorage.setItem("quiz_8", form.priority.value);
+        localStorage.setItem("quiz_9", form.friends.value);
+        localStorage.setItem("quiz_10", form.vibe.value);
+
+        window.location.href = "../UserType";
+        return;
+      }
+  
+      current++;
+      showQuestion(current);
+      history.pushState({}, '', 'quiz.html'); 
+    });
+  
+    window.addEventListener('popstate', function () {
+      if (current === 0) {
+        window.location.href = 'register.html';
+      } else {
+        current--;
+        showQuestion(current);
+      }
+    });
+  
+    showQuestion(current);
+  </script>
+  
+</body>
+</html>
