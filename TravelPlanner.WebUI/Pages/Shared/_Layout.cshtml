@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TravelPlanner.WebUI</title>
     <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/TravelPlanner.WebUI.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TravelPlanner.WebUI.styles.css" asp-append-version="true" /> -->
 </head>
 @* <body>
     <header>
@@ -51,16 +51,7 @@
 </body> *@
 
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a asp-page="/HomePage">Home</a></li>
-                <li><a asp-page="/Account">Account</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <main role="main" class="container">
+    <main role="main">
         @RenderBody()
     </main>
 </body>
