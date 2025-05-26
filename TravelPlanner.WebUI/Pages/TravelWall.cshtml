@@ -1,0 +1,320 @@
+@page
+@model TravelPlanner.WebUI.Pages.TravelWallModel
+@{
+    ViewData["Title"] = "TravelWall Page";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Planner Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+   * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  position: relative;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 0;
+}
+
+main {
+  padding: 2rem;
+  z-index: 5;
+  position: relative;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 6;
+}
+
+.logo {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.user-icon,
+.camera-icon {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.user-icon:hover,
+.camera-icon:hover {
+  transform: scale(1.1);
+}
+
+.wall-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 1rem 1rem 0rem;
+  color: white;
+  text-align: left;
+  z-index: 2;
+}
+
+.wall-subtitle {
+  font-size: 1.2rem;
+  font-weight: 300;
+  margin-left: 1rem;
+  color: white;
+  text-align: left;
+  z-index: 2;
+  line-height: 1.6;
+}
+
+.wall-container {
+  background-color: white;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  padding: 2rem;
+  flex-shrink: 0;
+  z-index: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  min-height: 400px;
+  margin-bottom: -35px;
+  margin-left: -35px;
+  margin-right: -35px;
+}
+
+.post {
+  background-color: #f9f9f9;
+  border-radius: 20px;
+  padding: 1rem;
+  color: #333;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.post-header {
+  margin-bottom: 1rem;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.traveler-type {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.post-date {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.post-location {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-top: 0.2rem;
+}
+
+.post-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.post-image:hover {
+  transform: scale(1.02);
+}
+
+.like-button {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  color: #ccc;
+}
+
+.like-button.liked {
+  color: #e74c3c;
+}
+
+.comments {
+  margin-top: 1rem;
+  width: 100%;
+  text-align: left;
+}
+
+.comment {
+  font-size: 0.9rem;
+  color: #444;
+  background-color: #efefef;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+}
+
+
+#imageViewer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+#imageViewer img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+}
+
+    .post-location {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-top: 0.2rem;
+    }
+
+    .comments {
+      margin-top: 1rem;
+      width: 100%;
+      text-align: left;
+    }
+
+    .comment {
+      font-size: 0.9rem;
+      color: #444;
+      background-color: #efefef;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+    }
+
+    .show-more {
+      background: none;
+      border: none;
+      color:rgb(36, 100, 168);
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <main>
+    <header>
+      <div class="logo">Travel Planner</div>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="../TravelWall"><img src="media/camera-icon.png" alt="Camera Icon" class="camera-icon"></a>
+        <a href="account.html"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
+      </div>
+    </header>
+
+    <h2 class="wall-title">Travel Wall</h2>
+    <h3 class="wall-subtitle">See moments from fellow travelers. Share your own and inspire others.</h3>
+  </main>
+
+  <section class="wall-container">
+    @foreach (var post in Model.Posts)
+    {
+      <div class="post">
+        <div class="post-header">
+          <div class="username">@post.Username</div>
+          <div class="traveler-type">@post.TravelerType</div>
+          <div class="post-date">@post.PostDate</div>
+          <div class="post-location">📍 @post.Location</div>
+        </div>
+        <img src="@post.ImagePath" alt="Post Image" class="post-image" onclick="viewImage(this.src)">
+        <button class="like-button" onclick="toggleLike(this)">♡</button>
+
+        <div class="comments">
+          @for (int i = 0; i < post.Comments.Count; i++)
+          {
+              var comment = post.Comments[i];
+              var isExtra = i >= 2;
+              <div class="comment @(isExtra ? "extra-comment" : "")" style="@(isExtra ? "display:none;" : "")">@comment</div>
+          }
+          @if (post.Comments.Count > 2)
+          {
+              <button class="show-more" onclick="toggleComments(this)">Show more</button>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <div id="imageViewer" onclick="this.style.display='none'">
+    <img id="viewerImg" src="" alt="Full View">
+  </div>
+
+  <script>
+   const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+  const randomImage = images[Math.floor(Math.random() * images.length)];
+  const preloadImage = new Image();
+  preloadImage.src = randomImage;
+  preloadImage.onload = () => {
+    document.body.style.backgroundImage = `url('${randomImage}')`;
+  };
+
+    function toggleLike(button) {
+      button.classList.toggle("liked");
+      button.textContent = button.classList.contains("liked") ? "❤️" : "♡";
+    }
+
+    function viewImage(src) {
+      const viewer = document.getElementById("imageViewer");
+      const viewerImg = document.getElementById("viewerImg");
+      viewerImg.src = src;
+      viewer.style.display = "flex";
+    }
+
+    function toggleComments(button) {
+      const comments = button.parentElement.querySelectorAll(".extra-comment");
+      const isHidden = comments[0].style.display === "none";
+      comments.forEach(c => c.style.display = isHidden ? "block" : "none");
+      button.textContent = isHidden ? "Show less" : "Show more";
+    }
+  </script>
+</body>
+</html>
