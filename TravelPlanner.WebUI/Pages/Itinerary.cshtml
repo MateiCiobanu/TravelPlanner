@@ -1,0 +1,281 @@
+@page
+@model TravelPlanner.WebUI.Pages.ItineraryModel
+@{
+    ViewData["Title"] = "Itinerary Page";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Planner – Itinerary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    main {
+      padding: 2rem;
+      z-index: 5;
+      position: relative;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 6;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 700;
+    }
+
+    .user-icon, .camera-icon {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .user-icon:hover, .camera-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .itinerary-layout {
+      display: flex;
+      flex-grow: 1;
+      position: relative;
+      z-index: 5;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .day-selector {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 250px;
+    }
+
+    .day-button {
+      display: block;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      padding: 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .day-button:hover,
+    .day-button.active {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .activities {
+      margin-top: 1rem;
+    }
+
+    .activity {
+      background-color: white;
+      color: #333;
+      padding: 0.8rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      text-shadow: none;
+    }
+
+    .map-container {
+      flex-grow: 1;
+      background-color: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    iframe.map {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 12px;
+    }
+  .itinerary-layout {
+      display: flex;
+      flex-grow: 1;
+      position: relative;
+      z-index: 5;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .day-viewer {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 12px;
+      padding: 1rem;
+      width: 300px;
+      text-align: center;
+    }
+
+    .day-label {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .activities {
+      margin-top: 1rem;
+    }
+
+    .activity {
+      background-color: white;
+      color: #333;
+      padding: 0.8rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      text-shadow: none;
+    }
+
+    .arrow-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .arrow-button {
+      font-size: 2rem;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .arrow-button:hover {
+      transform: scale(1.2);
+    }
+
+    .map-container {
+      flex-grow: 1;
+      background-color: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    iframe.map {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <main>
+    <header>
+      <div class="logo">Travel Planner</div>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="../TravelWall"><img src="media/camera-icon.png" alt="Camera Icon" class="camera-icon"></a>
+        <a href="account.html"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
+      </div>
+    </header>
+
+    <div class="itinerary-layout">
+      <div class="day-viewer">
+        <div class="day-label" id="dayLabel">Day 1</div>
+        <div class="activities" id="activities">
+        </div>
+        <div class="arrow-buttons">
+          <button class="arrow-button" onclick="navigateDay(-1)">&lsaquo;</button>
+          <button class="arrow-button" onclick="navigateDay(1)">&rsaquo;</button>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <iframe class="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2882.405062043085!2d12.4922303!3d41.8902101!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f61aa8ce77f15%3A0x7f57d1c50f0c9a3c!2sColosseum!5e0!3m2!1sen!2sro!4v1680000000000!5m2!1sen!2sro" allowfullscreen="" loading="lazy"></iframe>
+      </div>
+    </div>
+  </main>
+ @using System.Text.Json
+<script>
+  const activitiesByDay = @Html.Raw(JsonSerializer.Serialize(Model.ActivitiesByDay));
+</script>
+
+  <script>
+      const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+  const randomImage = images[Math.floor(Math.random() * images.length)];
+  const preloadImage = new Image();
+  preloadImage.src = randomImage;
+  preloadImage.onload = () => {
+    document.body.style.backgroundImage = `url('${randomImage}')`;
+  };
+
+  let currentDay = 1;
+  const totalDays = Object.keys(activitiesByDay).length;
+
+  function renderDay() {
+    const dayLabel = document.getElementById("dayLabel");
+    const activities = document.getElementById("activities");
+
+    dayLabel.textContent = `Day ${currentDay}`;
+    activities.innerHTML = "";
+
+    activitiesByDay[currentDay].forEach(activity => {
+      const div = document.createElement("div");
+      div.className = "activity";
+      div.textContent = activity;
+      activities.appendChild(div);
+    });
+  }
+
+  function navigateDay(direction) {
+    currentDay += direction;
+    if (currentDay < 1) currentDay = totalDays;
+    if (currentDay > totalDays) currentDay = 1;
+    renderDay();
+  }
+
+  renderDay();
+</script>
+</body>
+</html>
