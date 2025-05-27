@@ -206,6 +206,22 @@
       border: none;
       border-radius: 12px;
     }
+    .save-itinerary-button {
+      margin-top: 1rem;
+      background-color: #2482c8;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .save-itinerary-button:hover {
+       background-color: #1d6fab;
+    }
+
   </style>
 </head>
 <body>
@@ -229,6 +245,7 @@
           <button class="arrow-button" onclick="navigateDay(-1)">&lsaquo;</button>
           <button class="arrow-button" onclick="navigateDay(1)">&rsaquo;</button>
         </div>
+        <button class="save-itinerary-button" onclick="saveItinerary()">Save Itinerary</button>
       </div>
 
       <div class="map-container">
@@ -276,6 +293,10 @@
   }
 
   renderDay();
+  function saveItinerary() {
+  alert("Itinerary saved! (This would send data to the server)");
+  }
+
 </script>
 </body>
 </html>
