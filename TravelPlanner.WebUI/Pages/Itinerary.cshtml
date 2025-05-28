@@ -270,20 +270,186 @@
   let currentDay = 1;
   const totalDays = Object.keys(activitiesByDay).length;
 
+  const activityInfo = {
+  "Visit Colosseum": {
+    hours: "08:30 – 19:00",
+    website: "https://parcocolosseo.it/en/",
+    wikipedia: "https://en.wikipedia.org/wiki/Colosseum",
+    phoneIntl: "+39 06 3996 7700",
+    phoneNational: "06 3996 7700",
+    rating: "4.7 / 5"
+  },
+  "Lunch near Trevi Fountain": {
+    hours: "12:00 – 15:00",
+    website: "https://www.trevifountain.net/",
+    wikipedia: "https://en.wikipedia.org/wiki/Trevi_Fountain",
+    phoneIntl: "+39 06 1234 5678",
+    phoneNational: "06 1234 5678",
+    rating: "4.3 / 5"
+  },
+};
+
   function renderDay() {
-    const dayLabel = document.getElementById("dayLabel");
-    const activities = document.getElementById("activities");
+  const dayLabel = document.getElementById("dayLabel");
+  const activitiesContainer = document.getElementById("activities");
 
-    dayLabel.textContent = `Day ${currentDay}`;
-    activities.innerHTML = "";
+  dayLabel.textContent = `Day ${currentDay}`;
+  activitiesContainer.innerHTML = "";
 
-    activitiesByDay[currentDay].forEach(activity => {
-      const div = document.createElement("div");
-      div.className = "activity";
-      div.textContent = activity;
-      activities.appendChild(div);
-    });
+  const dayActivities = activitiesByDay[currentDay];
+
+  dayActivities.forEach((activity, index) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "activity";
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "center";
+    wrapper.style.alignItems = "center";
+    wrapper.style.height = "50px";
+
+    if (!activity) {
+      const addBtn = createAddButton(() => {
+        const newActivity = prompt("Enter new activity:");
+        if (newActivity) {
+          dayActivities[index] = newActivity;
+          renderDay();
+        }
+      });
+      wrapper.style.justifyContent = "center";
+      wrapper.appendChild(addBtn);
+    } else {
+      const span = createActivitySpan(activity);
+      const deleteBtn = createDeleteButton(() => {
+        dayActivities[index] = null;
+        renderDay();
+      });
+
+      wrapper.appendChild(span);
+      wrapper.appendChild(deleteBtn);
+    }
+
+    activitiesContainer.appendChild(wrapper);
+  });
+}
+function createAddButton(onClick) {
+  const btn = document.createElement("button");
+  btn.textContent = "+";
+  Object.assign(btn.style, {
+    backgroundColor: "#1e88e5",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    padding: "0.3rem 0.6rem",         
+    fontSize: "1rem",
+    cursor: "pointer",
+    height: "32px",                 
+    lineHeight: "1",
+    margin: "0",                     
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
+  });
+  btn.onclick = onClick;
+  return btn;
+}
+
+
+function createDeleteButton(onClick) {
+  const btn = document.createElement("button");
+  btn.textContent = "✕";
+  Object.assign(btn.style, {
+    marginLeft: "auto",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#999999",         
+    fontSize: "1.2rem",
+    padding: "0 0.5rem",
+    transition: "color 0.2s ease"
+  });
+
+  btn.onmouseenter = () => btn.style.color = "#666666";
+  btn.onmouseleave = () => btn.style.color = "#999999";
+
+  btn.onclick = onClick;
+  return btn;
+}
+
+
+function createActivitySpan(activity) {
+  const span = document.createElement("span");
+  span.textContent = activity;
+  span.style.cursor = "pointer";
+  span.onclick = () => showActivityInfo(activity);
+  return span;
+}
+
+function showActivityInfo(activity) {
+  const info = activityInfo[activity];
+  if (!info) {
+    alert("No information available for this activity.");
+    return;
   }
+
+ const popup = document.createElement("div");
+
+popup.innerHTML = `
+  <div id="popup-overlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+  "></div>
+
+  <div id="popup-content" style="
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    color: #333;
+    padding: 1.5rem;
+    border-radius: 16px;
+    z-index: 9999;
+    width: 360px;
+    max-width: 90%;
+    font-family: 'Poppins', sans-serif;
+    text-shadow: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.95);
+  ">
+    <h2 style="margin-bottom: 0.8rem; font-size: 1.3rem;">${activity}</h2>
+    <p style="margin: 0.3rem 0;"><strong>🕒 Hours:</strong> ${info.hours}</p>
+    <p style="margin: 0.3rem 0;"><strong>📞 Intl:</strong> ${info.phoneIntl}</p>
+    <p style="margin: 0.3rem 0;"><strong>📞 Local:</strong> ${info.phoneNational}</p>
+    <p style="margin: 0.3rem 0;"><strong>⭐ Rating:</strong> ${info.rating}</p>
+    <p style="margin: 0.6rem 0;">
+      <a href="${info.website}" target="_blank" style="color: #2482c8; text-decoration: none;">🌐 Website</a>
+    </p>
+    <p style="margin: 0.6rem 0;">
+      <a href="${info.wikipedia}" target="_blank" style="color: #2482c8; text-decoration: none;">📚 Wikipedia</a>
+    </p>
+  </div>
+`;
+
+// Close when clicking the overlay
+popup.querySelector("#popup-overlay").addEventListener("click", () => {
+  document.body.removeChild(popup);
+});
+
+document.body.appendChild(popup);
+
+// Trigger smooth fade-in after append
+setTimeout(() => {
+  const content = popup.querySelector("#popup-content");
+  content.style.opacity = "1";
+  content.style.transform = "translate(-50%, -50%) scale(1)";
+}, 10);
+
+}
+
+
 
   function navigateDay(direction) {
     currentDay += direction;
