@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace TravelPlanner.Application.DTOs
 {
-    public class UserCreateDTO
+    public class UserUpdateDTO
     {
-        public string Name { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
+        public String TravelerType { get; set; }
     }
 }

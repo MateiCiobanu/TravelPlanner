@@ -28,7 +28,6 @@ builder.Services.AddAutoMapper(typeof(Mapping).Assembly);
 
 // Repository registration
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITravelerTypeRepository, TravelerTypeRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IItineraryItemRepository, ItineraryItemRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();

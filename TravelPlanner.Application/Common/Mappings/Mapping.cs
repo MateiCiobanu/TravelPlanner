@@ -12,8 +12,7 @@ namespace TravelPlanner.Application.Common.Mapping
         {
             CreateMap<UserCreateDTO, User>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.TravelerTypes, opt => opt.Ignore());
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
             CreateMap<Post, PostDto>()
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments))
                 .ForMember(dest => dest.CommentsNum, opt => opt.MapFrom(src => src.Comments.Count))

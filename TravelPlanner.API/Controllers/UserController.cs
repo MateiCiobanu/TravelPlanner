@@ -18,16 +18,14 @@ namespace TravelPlanner.API.Controllers
     public class UserController : Controller
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITravelerTypeRepository _travelerTypeRepository;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
-        public UserController(IUserRepository userRepository, IConfiguration configuration, IMapper mapper, ITravelerTypeRepository travelerTypeRepository)
+        public UserController(IUserRepository userRepository, IConfiguration configuration, IMapper mapper)
         {
             _userRepository = userRepository;
             _configuration = configuration;
             _mapper = mapper;
-            _travelerTypeRepository = travelerTypeRepository;
         }
 
         [HttpPost("register")]
@@ -50,6 +48,7 @@ namespace TravelPlanner.API.Controllers
                     return BadRequest(ModelState);
 
                 var userMap = _mapper.Map<User>(userDto);
+                userMap.TravelerType = "undefined";
                 CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
                 userMap.PasswordHash = passwordHash;
@@ -62,20 +61,35 @@ namespace TravelPlanner.API.Controllers
                     return StatusCode(500, ModelState);
                 }
 
-                foreach(TravelerTypeCreateDTO type in userDto.TravelerTypes)
-                {
-                    var travelerType = new TravelerType();
-                    travelerType.TravelerTypeName = type.TravelerTypeName;
-                    travelerType.PreferenceWeight = type.PreferenceWeight;
-                    travelerType.UserId = userMap.Id;
-                    if (!await _travelerTypeRepository.CreateTravelerType(travelerType))
-                    {
-                        ModelState.AddModelError("", "Something went wrong while saving travelerType");
-                        return StatusCode(500, ModelState);
-                    }
-                }
-
                 return Ok("Successfully created");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDTO userDto)
+        {
+            try
+            {
+                if(userDto == null)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = await _userRepository.GetUserByEmail(userDto.Email);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+                user.TravelerType = userDto.TravelerType;
+                if (!await _userRepository.Save())
+                {
+                    ModelState.AddModelError("", "Something went wrong while updating user");
+                    return StatusCode(500, ModelState);
+                }
+                return Ok("Successfully updated");
             }
             catch (Exception ex)
             {
