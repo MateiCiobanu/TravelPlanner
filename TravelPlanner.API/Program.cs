@@ -31,7 +31,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITravelerTypeRepository, TravelerTypeRepository>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IItineraryItemRepository, ItineraryItemRepository>();
-
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddLogging();
 
 
