@@ -4,27 +4,27 @@ using System.ComponentModel.DataAnnotations;
 namespace TravelPlanner.Application.DTOs
 {
 
-// Trip-related DTOs
+    // Trip-related DTOs
     public class TripCreationDto
     {
         [Required]
         public int UserId { get; set; }
-        
+
         [Required]
         [StringLength(100)]
         public string Title { get; set; }
-        
+
         [Required]
         [StringLength(100)]
         public string Destination { get; set; }
-        
+
         [Required]
         public DateTime StartDate { get; set; }
-        
+
         [Required]
         public DateTime EndDate { get; set; }
     }
-    
+
     public class TripDto
     {
         public int Id { get; set; }
@@ -36,7 +36,7 @@ namespace TravelPlanner.Application.DTOs
         public string Status { get; set; }
         public List<ItineraryItemDto> ItineraryItems { get; set; }
     }
-    
+
     public class ItineraryItemDto
     {
         public int Id { get; set; }
@@ -48,32 +48,34 @@ namespace TravelPlanner.Application.DTOs
         public TimeSpan? EndTime { get; set; }
         public int? Duration { get; set; }
     }
-    
+
     public class PlaceSuggestionRequestDto
     {
         [Required]
-        public string Destination { get; set; }
-        
+        public required string Destination { get; set; }
+
         [Required]
-        public DateTime StartDate { get; set; }
-        
+        public required DateTime StartDate { get; set; }
+
         [Required]
-        public DateTime EndDate { get; set; }
-        
+        public required DateTime EndDate { get; set; }
+
+        [Required]
+        public required TravelerTypeDto TravelerType { get; set; }
     }
-    
+
     public class PlaceSuggestionsResponseDto
     {
         public List<DailyPlaceSuggestions> DailySuggestions { get; set; } = new List<DailyPlaceSuggestions>();
     }
-    
+
     public class DailyPlaceSuggestions
     {
         public int DayNumber { get; set; }
         public DateTime Date { get; set; }
         public List<PlaceSuggestion> Places { get; set; } = new List<PlaceSuggestion>();
     }
-    
+
     public class PlaceSuggestion
     {
         public string GooglePlaceId { get; set; }
@@ -83,8 +85,5 @@ namespace TravelPlanner.Application.DTOs
         public double Rating { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
-        
-
     }
-
 }

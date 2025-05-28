@@ -15,7 +15,7 @@ namespace TravelPlanner.Application.Services
         private readonly ILogger<ItinerarySuggestionService> _logger;
         private readonly Random _random = new Random();
 
-               private readonly List<string> _categories = new List<string>
+        private readonly List<string> _categories = new List<string>
         {
             "attractions",       
             "museums",           
@@ -49,7 +49,7 @@ namespace TravelPlanner.Application.Services
             {
                 try
                 {
-                     var searchQuery = $"{category} in {request.Destination}";
+                    var searchQuery = $"{category} in {request.Destination}";
                     var places = await _googlePlacesService.GetPlacesAsync(searchQuery, request.Destination);
                     
                     if (places != null && places.Count > 0)

@@ -22,18 +22,18 @@ public class GooglePlacesService
 
     }
 
-    public async Task<List<PlaceDto>> GetPlacesAsync(string query, string location)
+    public async Task<List<PlaceDto>> GetPlacesAsync(string category, string location)
     {
-          query = Uri.EscapeDataString(query);
+        category = Uri.EscapeDataString(category);
         location = Uri.EscapeDataString(location);
-        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&location={location}&radius=50000&key={_apiKey}";
+        var url = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={category}+in+{location}&key={_apiKey}";
 
         var response = await _httpClient.GetFromJsonAsync<JsonElement>(url);
         var places = new List<PlaceDto>();
 
         foreach (var result in response.GetProperty("results").EnumerateArray())
         {
-                    places.Add(new PlaceDto
+            places.Add(new PlaceDto
             {
                 Name = result.GetProperty("name").GetString() ?? "Unknown",
                 PlaceId = result.GetProperty("place_id").GetString() ?? "",

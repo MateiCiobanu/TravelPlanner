@@ -20,7 +20,7 @@ namespace TravelPlanner.WebUI.Controllers
 
 
         [HttpGet("{destination}")]         
-        public async Task<IActionResult> Display(string destination, DateTime startDate, DateTime endDate)
+        public async Task<IActionResult> Display(string destination, DateTime startDate, DateTime endDate, TravelerTypeDto travelerType)
         {
             try
             {
@@ -28,7 +28,8 @@ namespace TravelPlanner.WebUI.Controllers
                 {
                     Destination = destination,
                     StartDate = startDate,
-                    EndDate = endDate
+                    EndDate = endDate,
+                    TravelerType = travelerType
                 };
 
                 var suggestions = await _suggestionService.GenerateSuggestionsAsync(request);

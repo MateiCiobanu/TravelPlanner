@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace TravelPlanner.Application.DTOs
 {
-    public class TravelerTypeCreateDTO
+    public class TravelerTypeDto
     {
-        public string TravelerTypeName { get; set; }
-        public int PreferenceWeight { get; set; } = 5;
+        public required string TravelerTypeName { get; set; }
     }
 }
