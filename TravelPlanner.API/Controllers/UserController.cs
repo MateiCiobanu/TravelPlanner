@@ -28,6 +28,36 @@ namespace TravelPlanner.API.Controllers
             _mapper = mapper;
         }
 
+        // YENİ ENDPOINT - User bilgilerini ID ile getir
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserById(id);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                // Hassas bilgileri gizle
+                var userInfo = new
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    TravelerType = user.TravelerType,
+                    CreatedAt = user.CreatedAt
+                };
+
+                return Ok(userInfo);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> CreateUser([FromBody] UserCreateDTO userDto)
         {
@@ -69,7 +99,72 @@ namespace TravelPlanner.API.Controllers
             }
         }
 
-        [HttpPut("update")]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest("Invalid request");
+
+                var user = await _userRepository.GetUserByEmail(request.Email);
+                if (user == null)
+                    return NotFound("User not found.");
+
+                // Mevcut şifreyi doğrula
+                if (!VerifyPasswordHash(request.CurrentPassword, user.PasswordHash, user.PasswordSalt))
+                    return BadRequest("Current password is incorrect.");
+
+                // Yeni şifreyi hashle
+                CreatePasswordHash(request.NewPassword, out byte[] newPasswordHash, out byte[] newPasswordSalt);
+                
+                user.PasswordHash = newPasswordHash;
+                user.PasswordSalt = newPasswordSalt;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                if (!await _userRepository.Save())
+                {
+                    return StatusCode(500, "Failed to update password");
+                }
+
+                return Ok("Password updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("update-profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
+        {
+            try
+            {
+                if (request == null)
+                    return BadRequest("Invalid request");
+
+                var user = await _userRepository.GetUserByEmail(request.Email);
+                if (user == null)
+                    return NotFound("User not found.");
+
+                // Profil bilgilerini güncelle
+                user.Name = request.Name;
+                user.Email = request.Email;
+                user.TravelerType = request.TravelerType;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                if (!await _userRepository.Save())
+                {
+                    return StatusCode(500, "Failed to update profile");
+                }
+
+                return Ok("Profile updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
         public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDTO userDto)
         {
             try
@@ -128,6 +223,7 @@ namespace TravelPlanner.API.Controllers
 
         private string CreateToken(User user)
         {
+            
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -161,35 +257,5 @@ namespace TravelPlanner.API.Controllers
             return computedHash.SequenceEqual(passwordHash);
 
         }
-        [HttpGet("getByEmail/{email}")]
-        public async Task<IActionResult> GetUserByEmail(string email)
-        {
-            try
-            {
-                var user = await _userRepository.GetUserByEmail(email);
-                if (user == null)
-                    return NotFound("User not found.");
-
-                return Ok(new
-                {
-                    user.Id,
-                    user.Name,
-                    user.Email,
-                    user.TravelerType
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-      [HttpGet("{id}")]
-      public async Task<IActionResult> GetUserById(int id)
-       {
-      var user = await _userRepository.GetUserById(id);
-      if (user == null)
-        return NotFound();
-       return Ok(new { Email = user.Email });
-      }
     }
 }

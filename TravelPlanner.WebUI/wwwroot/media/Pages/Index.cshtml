@@ -1,0 +1,114 @@
+﻿@page
+@model TravelPlanner.WebUI.Pages.IndexModel
+@{
+    ViewData["Title"] = "Landing Page";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LandingPage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 8vw;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: white;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6); 
+    }
+
+    .content {
+      max-width: 600px;
+      background-color: transparent; 
+    }
+
+    h1 {
+      font-size: 5rem;
+      font-weight: 700;
+      margin-bottom: -20px;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 300;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-right: 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.15); 
+      color: white;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    .overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     height: 100vh;
+     width: 100vw;
+     background-color: rgba(0, 0, 0, 0.4); 
+     z-index: 0;
+   }
+
+   .content {
+    position: relative;
+    z-index: 1; 
+   }
+   
+  </style>
+</head>
+<body>
+        <div class="overlay"></div>
+        <div class="content">
+          <h1>TravelPlanner</h1>
+          <h2>Looking for a travel experience that fits you? Get a personalized itinerary based on what you love and how you like to travel.</h2>
+          <button onclick="window.location.href='../Login'">Login</button>
+          <button onclick="window.location.href='../Register'">Register</button>
+        </div>
+
+  <script>
+    const images = [
+      '/media/bg1.jpg', '/media/bg2.jpg', '/media/bg3.jpg', '/media/bg4.jpg',
+      '/media/bg5.jpg', '/media/bg6.jpg', '/media/bg7.jpg', '/media/bg8.jpg',
+      '/media/bg9.jpg', '/media/bg10.jpg', '/media/bg11.jpg', '/media/bg12.jpg',
+      '/media/bg13.jpg', '/media/bg14.jpg', '/media/bg15.jpg', '/media/bg16.jpg',
+      '/media/bg17.jpg', '/media/bg18.jpg', '/media/bg19.jpg', '/media/bg20.jpg',
+      '/media/bg21.jpg', '/media/bg22.jpg', '/media/bg23.jpg', '/media/bg24.jpg',
+      '/media/bg25.jpg', '/media/bg26.jpg', '/media/bg27.jpg', '/media/bg28.jpg',
+      '/media/bg29.jpg', '/media/bg30.jpg'
+    ];
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    const preloadImage = new Image();
+      preloadImage.src = randomImage;
+        preloadImage.onload = () => {
+    document.body.style.backgroundImage = `url('${randomImage}')`;
+   };
+  </script>
+</body>
+</html>
