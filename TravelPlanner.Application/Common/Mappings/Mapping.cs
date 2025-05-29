@@ -19,6 +19,7 @@ namespace TravelPlanner.Application.Common.Mapping
                 .ForMember(dest => dest.NumLikes, opt => opt.MapFrom<NumPostLikesResolver>())
                 .ForMember(dest => dest.NumDislikes, opt => opt.MapFrom<NumPostDislikesResolver>())
                 .ForMember(dest => dest.LikedByUser, opt => opt.MapFrom<PostLikedByUser>())
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.DislikedByUser, opt => opt.MapFrom<PostDislikedByUser>());
             CreateMap<PostCreateDto, Post>();
             CreateMap<PostCreateDto, Comment>();

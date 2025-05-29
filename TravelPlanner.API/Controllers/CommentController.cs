@@ -175,6 +175,40 @@ namespace TravelPlanner.API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        [HttpGet]
+        public async Task<IActionResult> GetCommentsByPostId([FromQuery] int postId)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var comments = await _commentRepository.GetCommentsByPostId(postId);
+
+                var commentsDto = _mapper.Map<List<CommentDto>>(comments);
+
+                return Ok(commentsDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [HttpGet("isLiked")]
+        public async Task<IActionResult> IsCommentLiked([FromQuery] int userId, [FromQuery] int commentId)
+        {
+            try
+            {
+                var isLiked = await _likeRepository.CommentLikeExists(userId, commentId);
+                return Ok(isLiked);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
     }
 }
 
