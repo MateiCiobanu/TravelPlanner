@@ -319,6 +319,32 @@
       document.body.style.backgroundImage = `url('${randomImage}')`;
     };
 
+      async function fetchUserInfoByEmail(email) {
+      try {
+        const response = await fetch(`http://localhost:5192/api/user/getByEmail/${email}`);
+        if (!response.ok) {
+          throw new Error("User not found or server error");
+        }
+
+        const userData = await response.json();
+        
+        localStorage.setItem("user_id", userData.id);
+        localStorage.setItem("traveler_type", userData.travelerType);
+
+        return userData;
+      } catch (err) {
+        console.error("Error fetching user info:", err.message);
+        return null;
+      }
+    }
+    
+    window.onload = async function () {
+    const email = localStorage.getItem("user_email");
+    if (email) {
+      await fetchUserInfoByEmail(email);
+    }
+    };
+
     let currentSlide = 0;
     const track = document.getElementById('carouselTrack');
     const itemsToShow = 3;

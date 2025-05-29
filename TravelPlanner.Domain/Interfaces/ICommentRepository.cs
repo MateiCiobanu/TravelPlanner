@@ -14,5 +14,7 @@ namespace TravelPlanner.Domain.Interfaces
         Task<bool> CommentExists(int id);
         Task<Comment> GetCommentById(int id);
         Task<bool> Save();
+        Task<IEnumerable<Comment>> GetCommentsByPostId(int postId);
+
     }
 }

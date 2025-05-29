@@ -44,5 +44,13 @@ namespace TravelPlanner.Infrastructure.Repositories
         {
             return (await _context.SaveChangesAsync()) > 0;
         }
+         public async Task<IEnumerable<Comment>> GetCommentsByPostId(int postId)
+            {
+                return await _context.Comments
+                    .Where(c => c.PostId == postId)
+                    .OrderBy(c => c.Date)
+                    .ToListAsync();
+            }
+
     }
 }

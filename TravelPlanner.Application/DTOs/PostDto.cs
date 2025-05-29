@@ -24,5 +24,6 @@ namespace TravelPlanner.Application.DTOs
         public int NumDislikes { get; set; }
         public bool LikedByUser { get; set; }
         public bool DislikedByUser { get; set; }
+        public string ImagePath { get; set; }
     }
 }
