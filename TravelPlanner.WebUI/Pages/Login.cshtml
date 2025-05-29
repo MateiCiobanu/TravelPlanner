@@ -160,6 +160,7 @@
     if (response.ok) {
       const token = await response.text();
       localStorage.setItem("jwt_token", token); 
+      localStorage.setItem("user_email", email);
       window.location.href = "/Homepage"; 
     } else {
       const error = await response.text();
