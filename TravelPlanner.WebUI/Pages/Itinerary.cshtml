@@ -249,17 +249,13 @@
       </div>
 
       <div class="map-container">
-        <iframe class="map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2882.405062043085!2d12.4922303!3d41.8902101!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132f61aa8ce77f15%3A0x7f57d1c50f0c9a3c!2sColosseum!5e0!3m2!1sen!2sro!4v1680000000000!5m2!1sen!2sro" allowfullscreen="" loading="lazy"></iframe>
+        <iframe class="map" id="dynamicMap" allowfullscreen="" loading="lazy"></iframe>
       </div>
     </div>
   </main>
- @using System.Text.Json
-<script>
-  const activitiesByDay = @Html.Raw(JsonSerializer.Serialize(Model.ActivitiesByDay));
-</script>
 
   <script>
-      const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
   const randomImage = images[Math.floor(Math.random() * images.length)];
   const preloadImage = new Image();
   preloadImage.src = randomImage;
@@ -268,7 +264,13 @@
   };
 
   let currentDay = 1;
-  const totalDays = Object.keys(activitiesByDay).length;
+  const itineraryData = JSON.parse(sessionStorage.getItem("itineraryData"));
+  const totalDays = itineraryData.dailySuggestions.length;
+
+  const activitiesByDay = {};
+  itineraryData.dailySuggestions.forEach(day => {
+    activitiesByDay[day.dayNumber] = day.places.map(p => p.name);
+  });
 
   const activityInfo = {
   "Visit Colosseum": {
@@ -289,14 +291,14 @@
   },
 };
 
-  function renderDay() {
+function renderDay() {
   const dayLabel = document.getElementById("dayLabel");
   const activitiesContainer = document.getElementById("activities");
 
   dayLabel.textContent = `Day ${currentDay}`;
   activitiesContainer.innerHTML = "";
 
-  const dayActivities = activitiesByDay[currentDay];
+  const dayActivities = activitiesByDay[currentDay] || [];
 
   dayActivities.forEach((activity, index) => {
     const wrapper = document.createElement("div");
@@ -314,7 +316,6 @@
           renderDay();
         }
       });
-      wrapper.style.justifyContent = "center";
       wrapper.appendChild(addBtn);
     } else {
       const span = createActivitySpan(activity);
@@ -330,6 +331,7 @@
     activitiesContainer.appendChild(wrapper);
   });
 }
+
 function createAddButton(onClick) {
   const btn = document.createElement("button");
   btn.textContent = "+";
@@ -458,11 +460,28 @@ setTimeout(() => {
     renderDay();
   }
 
-  renderDay();
   function saveItinerary() {
   alert("Itinerary saved! (This would send data to the server)");
   }
 
+  renderDay();
+
+  const googlePlacesApiKey = "@Html.Raw(Model.GooglePlacesApiKey)";
+  function updateMap(destination) {
+  const encodedLocation = encodeURIComponent(destination);
+  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlePlacesApiKey}&q=${encodedLocation}&zoom=13`;
+  document.getElementById("dynamicMap").src = mapUrl;
+}
+
+
+// Set map on page load
+const firstPlace = itineraryData?.dailySuggestions?.[0]?.places?.[0];
+if (firstPlace) {
+  const destination = firstPlace.address.split(",").slice(-1)[0].trim();
+  updateMap(destination);
+}
+
 </script>
+
 </body>
 </html>

@@ -265,9 +265,17 @@
     </header>
 
     <section class="search-bar" id="searchSection">
-      <input type="text" id="cityInput" placeholder="City to visit">
-      <input type="date" id="startDate">
-      <input type="date" id="endDate">
+        <input type="text" id="cityInput" placeholder="City to visit">
+        <input type="date" id="startDate">
+        <input type="date" id="endDate">
+        <select id="travelerType">
+            <option value="Culture Explorer">Culture Explorer</option>
+            <option value="Chill Seeker">Chill Seeker</option>
+            <option value="Foodie Adventurer">Foodie Adventurer</option>
+            <option value="Urban Explorer">Urban Explorer</option>
+            <option value="Nature Enthusiast">Nature Enthusiast</option>
+            <option value="Night Owl">Night Owl</option>
+    </select>
 
       <div class="people-wrapper">
         <input type="number" id="peopleInput" placeholder="People" min="1">
@@ -316,13 +324,13 @@
     const itemsToShow = 3;
 
     function moveCarousel(direction) {
-      const totalItems = track.children.length;
-      const maxSlide = totalItems - itemsToShow;
-      currentSlide += direction;
-      if (currentSlide < 0) currentSlide = 0;
-      if (currentSlide > maxSlide) currentSlide = maxSlide;
-      const slideWidth = track.children[0].offsetWidth;
-      track.style.transform = `translateX(-${currentSlide * slideWidth}px)`;
+        const totalItems = track.children.length;
+        const maxSlide = totalItems - itemsToShow;
+        currentSlide += direction;
+        if (currentSlide < 0) currentSlide = 0;
+        if (currentSlide > maxSlide) currentSlide = maxSlide;
+        const slideWidth = track.children[0].offsetWidth;
+        track.style.transform = `translateX(-${currentSlide * slideWidth}px)`;
     }
 
     const peopleInput = document.getElementById("peopleInput");
@@ -330,63 +338,82 @@
     let personInputs = [];
 
     peopleInput.addEventListener("input", () => {
-      const count = parseInt(peopleInput.value);
-      dropdown.innerHTML = "";
-      personInputs = [];
+        const count = parseInt(peopleInput.value);
+        dropdown.innerHTML = "";
+        personInputs = [];
 
-      if (!isNaN(count) && count > 1) {
-        dropdown.classList.remove("hidden");
-        for (let i = 1; i < count; i++) {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.placeholder = `Email of person ${i + 1}`;
-          dropdown.appendChild(input);
-          personInputs.push(input);
+        if (!isNaN(count) && count > 1) {
+            dropdown.classList.remove("hidden");
+            for (let i = 1; i < count; i++) {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = `Email of person ${i + 1}`;
+            dropdown.appendChild(input);
+            personInputs.push(input);
+            }
+        } else {
+            dropdown.classList.add("hidden");
         }
-      } else {
-        dropdown.classList.add("hidden");
-      }
     });
 
     document.addEventListener("click", (e) => {
-      if (!document.querySelector(".people-wrapper").contains(e.target)) {
-        dropdown.classList.add("hidden");
-      }
+        if (!document.querySelector(".people-wrapper").contains(e.target)) {
+            dropdown.classList.add("hidden");
+        }
     });
 
     peopleInput.addEventListener("focus", () => {
-      if (personInputs.length > 0) {
-        dropdown.classList.remove("hidden");
-        personInputs.forEach(input => dropdown.appendChild(input));
-      }
+        if (personInputs.length > 0) {
+            dropdown.classList.remove("hidden");
+            personInputs.forEach(input => dropdown.appendChild(input));
+        }
     });
 
     let timeoutId;
-    function validateInputs() {
-      const city = document.getElementById("cityInput").value.trim();
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const people = document.getElementById("peopleInput").value;
+    async function validateInputs() {
+    const city = document.getElementById("cityInput").value.trim();
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+    const people = document.getElementById("peopleInput").value;
 
-      let valid = city && start && end && people;
-      if (parseInt(people) > 1) {
-        valid = valid && personInputs.every(input => input.value.trim() !== "");
-      }
+    const messageBox = document.getElementById("errorMessage");
 
-      const messageBox = document.getElementById("errorMessage");
-      if (!valid) {
+    if (!city || !start || !end || !people) {
         messageBox.textContent = "Please complete all fields before creating the itinerary.";
         messageBox.classList.remove("hidden");
-
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          messageBox.classList.add("hidden");
-        }, 800);
-      } else {
-        messageBox.classList.add("hidden");
-        window.location.href = "/Itinerary";
-      }
+        return;
     }
+
+    messageBox.classList.add("hidden");
+
+    const type = document.getElementById("travelerType").value;
+
+    const requestBody = {
+        destination: city,
+        startDate: start,
+        endDate: end,
+        travelerType: { typeName: type }  
+    };
+
+    try {
+        const response = await fetch("http://localhost:5192/api/ItinerarySuggestions/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) throw new Error("Failed to generate itinerary.");
+
+        const data = await response.json();
+
+        // Store data in sessionStorage and redirect
+        sessionStorage.setItem("itineraryData", JSON.stringify(data));
+        window.location.href = "/Itinerary";
+    } catch (err) {
+        messageBox.textContent = "Error generating itinerary. Please try again.";
+        messageBox.classList.remove("hidden");
+    }
+}
   </script>
    
 </body>

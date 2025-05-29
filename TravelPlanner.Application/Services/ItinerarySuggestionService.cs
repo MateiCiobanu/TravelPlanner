@@ -43,6 +43,36 @@ namespace TravelPlanner.Application.Services
             int totalDays = (int)(request.EndDate - request.StartDate).TotalDays + 1;
             _logger.LogInformation($"Trip duration: {totalDays} days");
 
+
+            var preferredCategories = _categories;
+
+            var travelerTypeName = request.TravelerType?.TravelerTypeName?.ToLowerInvariant() ?? "";
+
+            switch (travelerTypeName)
+            {
+                case "culture explorer":
+                    preferredCategories = new List<string> { "museums", "attractions", "cafes" };
+                    break;
+                case "chill seeker":
+                    preferredCategories = new List<string> { "parks", "cafes", "shopping" };
+                    break;
+                case "night owl":
+                    preferredCategories = new List<string> { "restaurants", "bars", "clubs" };
+                    break;
+                case "foodie adventurer":
+                    preferredCategories = new List<string> { "restaurants", "cafes", "markets" };
+                    break;
+                case "urban explorer":
+                    preferredCategories = new List<string> { "shopping", "museums", "attractions" };
+                    break;
+                case "nature enthusiast":
+                    preferredCategories = new List<string> { "parks", "nature", "trails" };
+                    break;
+                default:
+                    preferredCategories = _categories;
+                    break;
+            }
+
             var allPlacesByCategory = new Dictionary<string, List<PlaceSuggestion>>();
             
             foreach (var category in _categories)
