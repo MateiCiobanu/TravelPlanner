@@ -1,0 +1,283 @@
+
+@page
+@model TravelPlanner.WebUI.Pages.IndexModel
+@{
+    ViewData["Title"] = "UserType Page";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Traveler Type</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 100vh;
+      padding: 3rem;
+      flex-direction: column;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    .welcome-text {
+      position: relative;
+      z-index: 1;
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 2rem 3rem;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .chart-container {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chart-legend-layout {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .chart-legend-layout canvas {
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      margin: 1.5rem 0 1rem;
+      color: white;
+    }
+
+    blockquote {
+      font-style: italic;
+      margin-bottom: 1rem;
+    }
+
+    .label {
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 2rem;
+    }
+
+    .reveal-button,
+    .home-button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 2rem;
+    }
+
+    .reveal-button:hover,
+    .home-button:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div id="welcome" class="welcome-text"></div>
+
+  <div class="card">
+
+    <div id="chartSection" class="chart-container">
+      <div class="chart-legend-layout">
+        <canvas id="typeChart"></canvas>
+      </div>
+    </div>
+
+    
+    <div id="infoSection" class="hidden">
+      <h2 id="type"></h2>
+      <blockquote id="quote"></blockquote>
+      <p class="label">Core Traits:</p>
+      <ul id="traits"></ul>
+      <p id="description"></p>
+    </div>
+
+    <button id="revealBtn" class="reveal-button" onclick="revealInfo()">Reveal My Travel Type</button>
+    <button id="homeBtn" class="home-button hidden" onclick="window.location.href='../Homepage'">Start planning!</button>
+    
+
+  </div>
+
+  <script src="@Url.Content("~/js/data.js")"></script>
+  <script src="@Url.Content("~/js/traveler_type.js")"></script>
+
+  <script>
+    
+    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    const preloadImage = new Image();
+    preloadImage.src = randomImage;
+    preloadImage.onload = () => {
+      document.body.style.backgroundImage = `url('${randomImage}')`;
+    };
+
+    
+    const userType = user_type;
+    const fullName = `${localStorage.getItem("user_firstName")} ${localStorage.getItem("user_lastName")}`;
+    document.getElementById("welcome").textContent = `Welcome, ${fullName}`;
+
+
+    const typePercentages = type_percentages;
+    const ctx = document.getElementById('typeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(typePercentages),
+        datasets: [{
+          data: Object.values(typePercentages).map(val => parseFloat(val)),
+          backgroundColor: [
+            'rgba(255, 255, 255, 0.9)',
+            'rgba(255, 255, 255, 0.7)',
+            'rgba(255, 255, 255, 0.5)',
+            'rgba(255, 255, 255, 0.3)',
+            'rgba(255, 255, 255, 0.2)',
+            'rgba(255, 255, 255, 0.1)',
+            'rgba(255, 255, 255, 0.05)'
+          ],
+          borderColor: 'rgba(255, 255, 255, 0.8)',
+          borderWidth: 2,
+          hoverOffset: 20
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'left',
+            labels: {
+              color: 'white',
+              padding: 20,
+              boxWidth: 20
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `${context.label}: ${context.raw.toFixed(2)}%`;
+              }
+            }
+          }
+        },
+        animation: {
+          animateScale: true,
+          animateRotate: true
+        }
+      }
+    });
+
+    function revealInfo() {
+      document.getElementById("chartSection").classList.add("hidden");
+      document.getElementById("infoSection").classList.remove("hidden");
+      document.getElementById("revealBtn").classList.add("hidden");
+      document.getElementById("homeBtn").classList.remove("hidden");
+
+      document.getElementById("type").textContent = `Your traveler type: ${userType}`;
+      if (typeInfo[userType]) {
+        document.getElementById("quote").textContent = `“${typeInfo[userType].quote}”`;
+        const traitsList = document.getElementById("traits");
+        traitsList.innerHTML = '';
+        typeInfo[userType].traits.forEach(trait => {
+          const li = document.createElement("li");
+          li.textContent = trait;
+          traitsList.appendChild(li);
+        });
+        document.getElementById("description").textContent = typeInfo[userType].description;
+      }
+            const email = localStorage.getItem("user_email");
+        fetch("http://localhost:5192/api/user/update", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email,
+            travelerType: userType
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            console.error("Failed to add traveler type");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
+    }
+    
+  </script>
+</body>
+</html>
