@@ -268,14 +268,14 @@
         <input type="text" id="cityInput" placeholder="City to visit">
         <input type="date" id="startDate">
         <input type="date" id="endDate">
-        <select id="travelerType">
+        @* <select id="travelerType">
             <option value="Culture Explorer">Culture Explorer</option>
             <option value="Chill Seeker">Chill Seeker</option>
             <option value="Foodie Adventurer">Foodie Adventurer</option>
             <option value="Urban Explorer">Urban Explorer</option>
             <option value="Nature Enthusiast">Nature Enthusiast</option>
             <option value="Night Owl">Night Owl</option>
-    </select>
+    </select> *@
 
       <div class="people-wrapper">
         <input type="number" id="peopleInput" placeholder="People" min="1">
@@ -329,7 +329,7 @@
         const userData = await response.json();
         
         localStorage.setItem("user_id", userData.id);
-        localStorage.setItem("traveler_type", userData.travelerType);
+        localStorage.setItem("traveler_type", userData.travelerType.travelerTypeName);
 
         return userData;
       } catch (err) {
@@ -340,8 +340,14 @@
     
     window.onload = async function () {
     const email = localStorage.getItem("user_email");
+
     if (email) {
-      await fetchUserInfoByEmail(email);
+        const user = await fetchUserInfoByEmail(email);
+        if (user?.travelerType?.travelerTypeName) {
+        localStorage.setItem("traveler_type", user.travelerType.travelerTypeName);
+        } else {
+        console.warn("Traveler type not found in user object");
+        }
     }
     };
 
@@ -396,50 +402,76 @@
     });
 
     let timeoutId;
-    async function validateInputs() {
-    const city = document.getElementById("cityInput").value.trim();
-    const start = document.getElementById("startDate").value;
-    const end = document.getElementById("endDate").value;
-    const people = document.getElementById("peopleInput").value;
+    async function validateInputs() 
+    {
+        const city = document.getElementById("cityInput").value.trim();
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+        const people = document.getElementById("peopleInput").value;
+        const messageBox = document.getElementById("errorMessage");
 
-    const messageBox = document.getElementById("errorMessage");
+        if (!city || !start || !end || !people) {
+            messageBox.textContent = "Please complete all fields before creating the itinerary.";
+            messageBox.classList.remove("hidden");
+            return;
+        }
 
-    if (!city || !start || !end || !people) {
-        messageBox.textContent = "Please complete all fields before creating the itinerary.";
-        messageBox.classList.remove("hidden");
-        return;
+        const email = localStorage.getItem("user_email");
+        if (!email) {
+            messageBox.textContent = "No user email found. Please log in again.";
+            messageBox.classList.remove("hidden");
+            return;
+        }
+
+        const user = await fetchUserInfoByEmail(email);
+
+        console.log("Fetched user object:", user);
+
+        if (!user?.travelerType?.travelerTypeName) {
+            messageBox.textContent = "Traveler type not found for this user.";
+            messageBox.classList.remove("hidden");
+            return;
+        }
+
+        const travelerType = user.travelerType.travelerTypeName;
+
+
+        @* messageBox.classList.add("hidden"); *@
+
+        localStorage.setItem("itinerary_city", city);
+        localStorage.setItem("itinerary_start", start);
+        localStorage.setItem("itinerary_end", end);
+        const peopleEmails = personInputs.map(input => input.value.trim());
+        localStorage.setItem("itinerary_people", JSON.stringify(peopleEmails))
+        localStorage.setItem("traveler_type", travelerType);
+
+        const requestBody = {
+            destination: city,
+            startDate: start,
+            endDate: end,
+            travelerType: { typeName: travelerType }
+        };
+
+        console.log("Traveler Type being sent:", travelerType);
+
+        try {
+            const response = await fetch("http://localhost:5192/api/ItinerarySuggestions/suggest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) throw new Error("Failed to generate itinerary.");
+
+            const data = await response.json();
+            sessionStorage.setItem("itineraryData", JSON.stringify(data));
+            window.location.href = "/Itinerary";
+        } 
+        catch (err) {
+            messageBox.textContent = "Error generating itinerary. Please try again.";
+            messageBox.classList.remove("hidden");
+        }
     }
-
-    messageBox.classList.add("hidden");
-
-    const type = document.getElementById("travelerType").value;
-
-    const requestBody = {
-        destination: city,
-        startDate: start,
-        endDate: end,
-        travelerType: { typeName: type }  
-    };
-
-    try {
-        const response = await fetch("http://localhost:5192/api/ItinerarySuggestions/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) throw new Error("Failed to generate itinerary.");
-
-        const data = await response.json();
-
-        // Store data in sessionStorage and redirect
-        sessionStorage.setItem("itineraryData", JSON.stringify(data));
-        window.location.href = "/Itinerary";
-    } catch (err) {
-        messageBox.textContent = "Error generating itinerary. Please try again.";
-        messageBox.classList.remove("hidden");
-    }
-}
   </script>
    
 </body>

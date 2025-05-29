@@ -15,16 +15,6 @@ namespace TravelPlanner.Application.Services
         private readonly ILogger<ItinerarySuggestionService> _logger;
         private readonly Random _random = new Random();
 
-        private readonly List<string> _categories = new List<string>
-        {
-            "attractions",       
-            "museums",           
-            "restaurants",       
-            "parks",             
-            "shopping",          
-            "cafes"              
-        };
-
 
         public ItinerarySuggestionService(
             GooglePlacesService googlePlacesService,
@@ -37,45 +27,76 @@ namespace TravelPlanner.Application.Services
         public async Task<PlaceSuggestionsResponseDto> GenerateSuggestionsAsync(PlaceSuggestionRequestDto request)
         {
             _logger.LogInformation($"Generating itinerary suggestions for {request.Destination} from {request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}");
-
+            _logger.LogWarning($"Received traveler type: {request.TravelerType?.TravelerTypeName}");
             var response = new PlaceSuggestionsResponseDto();
             
             int totalDays = (int)(request.EndDate - request.StartDate).TotalDays + 1;
             _logger.LogInformation($"Trip duration: {totalDays} days");
 
 
-            var preferredCategories = _categories;
+            var preferredCategories = new List<string>();
 
             var travelerTypeName = request.TravelerType?.TravelerTypeName?.ToLowerInvariant() ?? "";
 
             switch (travelerTypeName)
             {
                 case "culture explorer":
-                    preferredCategories = new List<string> { "museums", "attractions", "cafes" };
+                    preferredCategories = new List<string> {    "museum", "art_gallery", "church",
+                                                                "synagogue", "mosque", "library",
+                                                                "book_store", "tourist_attraction", "university",
+                                                                "local_government_office" };
                     break;
                 case "chill seeker":
-                    preferredCategories = new List<string> { "parks", "cafes", "shopping" };
+                    preferredCategories = new List<string> {    "cafe", "spa", "church",
+                                                                "hindu_temple", "mosque", "synagogue",
+                                                                "park", "art_gallery", "library",
+                                                                "movie_theater" };
                     break;
                 case "night owl":
-                    preferredCategories = new List<string> { "restaurants", "bars", "clubs" };
+                    preferredCategories = new List<string> {    "bar", "night_club", "pub",
+                                                                "casino", "restaurant", "meal_takeaway",
+                                                                "movie_theater", "bowling_alley" };
                     break;
                 case "foodie adventurer":
-                    preferredCategories = new List<string> { "restaurants", "cafes", "markets" };
+                    preferredCategories = new List<string> {    "restaurant", "cafe", "bakery",
+                                                                "bar", "meal_takeaway", "meal_delivery",
+                                                                "supermarket", "grocery_or_supermarket",
+                                                                "night_club" };
                     break;
                 case "urban explorer":
-                    preferredCategories = new List<string> { "shopping", "museums", "attractions" };
+                    preferredCategories = new List<string> {    "cafe", "shopping_mall", "clothing_store",
+                                                                "book_store", "bar", "night_club",
+                                                                "tourist_attraction", "movie_theater", "convenience_store",
+                                                                "art_gallery" };
                     break;
                 case "nature enthusiast":
-                    preferredCategories = new List<string> { "parks", "nature", "trails" };
+                    preferredCategories = new List<string> {    "park", "campground", 
+                                                                "scenic_lookout", "zoo",
+                                                                "aquarium", "gym", "spa",
+                                                                };
                     break;
                 default:
-                    preferredCategories = _categories;
+                    preferredCategories = new List<string>
+                    {
+                        // Food & Drink
+                        "restaurant", "cafe", "bar", "bakery",
+                        // Entertainment & Nightlife
+                        "movie_theater", "night_club", "bowling_alley", "casino",
+                        // Culture & Education
+                        "museum", "art_gallery", "library", "church", "synagogue", "mosque",
+                        // Nature & Leisure
+                        "park", "zoo", "aquarium", "campground", "spa",
+                        // Shopping & Exploration
+                        "shopping_mall", "clothing_store", "book_store", "convenience_store", "supermarket",
+                        // Tourist Hotspots
+                        "tourist_attraction", "local_government_office", "university"
+                    };
                     break;
             }
 
             var allPlacesByCategory = new Dictionary<string, List<PlaceSuggestion>>();
             
-            foreach (var category in _categories)
+            foreach (var category in preferredCategories)
             {
                 try
                 {
@@ -120,46 +141,33 @@ namespace TravelPlanner.Application.Services
                     Places = new List<PlaceSuggestion>()
                 };
 
-                var morningActivities = GetRandomPlaces(
-                    allPlacesByCategory.GetValueOrDefault("attractions", new List<PlaceSuggestion>())
-                        .Concat(allPlacesByCategory.GetValueOrDefault("museums", new List<PlaceSuggestion>()))
-                        .ToList(),
-                    _random.Next(1, 3)
-                );
-                dailySuggestion.Places.AddRange(morningActivities);
+                // Randomly pick morning, lunch, afternoon, dinner from allowed categories
+                foreach (var slot in new[] { "morning", "lunch", "afternoon", "dinner" })
+                {
+                    var shuffledCategories = preferredCategories.OrderBy(c => _random.Next()).ToList();
+                    bool added = false;
 
-                var lunchPlace = GetRandomPlaces(
-                    allPlacesByCategory.GetValueOrDefault("restaurants", new List<PlaceSuggestion>())
-                        .Concat(allPlacesByCategory.GetValueOrDefault("cafes", new List<PlaceSuggestion>()))
-                        .ToList(), 
-                    1);
-                    _logger.LogInformation($"Found {lunchPlace.Count} lunch places for this day.");
-                    if (lunchPlace.Any())
+                    foreach (var category in shuffledCategories)
                     {
-                        // Log the names of the places directly for better insight
-                        _logger.LogInformation($"Lunch places: {string.Join(", ", lunchPlace.Select(lp => lp.Name))}");
+                        var pool = allPlacesByCategory.GetValueOrDefault(category, new List<PlaceSuggestion>());
+                        if (pool == null || pool.Count == 0) continue;
+
+                        var neededCount = slot == "lunch" || slot == "dinner" ? 1 : _random.Next(1, 3);
+                        var selected = GetRandomPlaces(pool, neededCount);
+
+                        if (selected.Any())
+                        {
+                            dailySuggestion.Places.AddRange(selected);
+                            added = true;
+                            break;
+                        }
                     }
-                    else
+
+                    if (!added)
                     {
-                        _logger.LogWarning("No lunch places found.");
+                        _logger.LogWarning($"No suitable activity found for {slot} on Day {day} for type '{travelerTypeName}'");
                     }
-                    
-
-                dailySuggestion.Places.AddRange(lunchPlace);
-
-                var afternoonActivities = GetRandomPlaces(
-                    allPlacesByCategory.GetValueOrDefault("parks", new List<PlaceSuggestion>())
-                        .Concat(allPlacesByCategory.GetValueOrDefault("shopping_mall", new List<PlaceSuggestion>()))
-                        .ToList(),
-                    _random.Next(1, 3)
-                );
-                dailySuggestion.Places.AddRange(afternoonActivities);
-
-                var dinnerPlaces = allPlacesByCategory.GetValueOrDefault("restaurants", new List<PlaceSuggestion>())
-                    .Where(p => !lunchPlace.Any(lp => lp.GooglePlaceId == p.GooglePlaceId))
-                    .ToList();
-                var dinnerPlace = GetRandomPlaces(dinnerPlaces, 1);
-                dailySuggestion.Places.AddRange(dinnerPlace);
+                }
 
                 response.DailySuggestions.Add(dailySuggestion);
             }

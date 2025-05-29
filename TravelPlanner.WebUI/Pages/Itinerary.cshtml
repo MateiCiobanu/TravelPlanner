@@ -481,6 +481,23 @@ if (firstPlace) {
   updateMap(destination);
 }
 
+
+
+window.onload = function () {
+    const city = localStorage.getItem("itinerary_city");
+    const start = localStorage.getItem("itinerary_start");
+    const end = localStorage.getItem("itinerary_end");
+    const travelerType = localStorage.getItem("traveler_type");
+    const people = JSON.parse(localStorage.getItem("itinerary_people") || "[]");
+
+    console.log("City:", city);
+    console.log("Start Date:", start);
+    console.log("End Date:", end);
+    console.log("Traveler Type:", travelerType);
+    console.log("People Emails:", people);
+  };
+
+
 </script>
 
 </body>

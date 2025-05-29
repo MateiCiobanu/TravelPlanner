@@ -175,7 +175,7 @@ namespace TravelPlanner.API.Controllers
                     user.Id,
                     user.Name,
                     user.Email,
-                    user.TravelerType
+                    TravelerType = new { TravelerTypeName = user.TravelerType }
                 });
             }
             catch (Exception ex)
