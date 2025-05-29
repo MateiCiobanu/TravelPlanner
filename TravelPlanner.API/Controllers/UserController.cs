@@ -40,8 +40,8 @@ namespace TravelPlanner.API.Controllers
 
                 if (user != null)
                 {
-                    ModelState.AddModelError("", "User already exists");
-                    return StatusCode(422, ModelState);
+                    return StatusCode(422, "User already exists with this email.");
+
                 }
 
                 if (!ModelState.IsValid)
