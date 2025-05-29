@@ -112,9 +112,13 @@
   <div class="overlay"></div>
   <div class="login-container">
     <h1>Login</h1>
-    <input type="text" placeholder="Username" />
-    <input type="password" placeholder="Password" />
-    <button>Login</button>
+    <form id="loginForm">
+      <input type="email" placeholder="Email" id="email" required />
+      <input type="password" placeholder="Password" id="password" required />
+      <button id="loginBtn" type="submit">Login</button>
+    </form>
+
+    <p id="loginMessage" style="text-align:center; margin-top:1rem;"></p>
     <p class="register-text">Don’t have an account? <a href="../Register">Register now!</a></p>
   </div>
 
@@ -140,7 +144,33 @@
     window.addEventListener('popstate', function () {
     window.location.href = 'index.html';
    });
-   
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+
+  try {
+    const response = await fetch("http://localhost:5192/api/user/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (response.ok) {
+      const token = await response.text();
+      localStorage.setItem("jwt_token", token); 
+      window.location.href = "/Homepage"; 
+    } else {
+      const error = await response.text();
+      message.textContent = `Login failed: ${error}`;
+      message.style.color = "white";
+    }
+  } catch (err) {
+    message.textContent = "Something went wrong. Try again later.";
+    message.style.color = "white";
+  }
+});
   </script>
 </body>
 </html>

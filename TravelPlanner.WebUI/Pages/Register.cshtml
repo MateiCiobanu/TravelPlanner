@@ -245,48 +245,95 @@
     const form = document.getElementById("registerForm");
     const message = document.getElementById("message");
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      const firstName = document.getElementById("firstName").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const age = document.getElementById("age").value.trim();
-      const gender = document.getElementById("gender").value;
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+  window.onload = () => {
+  localStorage.removeItem("user_email");
+  localStorage.removeItem("user_firstName");
+  localStorage.removeItem("user_lastName");
+};
+  const firstName = document.getElementById("firstName").value.trim();
+  const lastName = document.getElementById("lastName").value.trim();
+  const age = document.getElementById("age").value.trim();
+  const gender = document.getElementById("gender").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
 
-      message.textContent = "";
-      message.classList.remove("success");
+  message.textContent = "";
+  message.classList.remove("success");
 
-      const hasUpper = /[A-Z]/.test(password);
-      const hasSpecial = /[^A-Za-z0-9]/.test(password);
-      const isLongEnough = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const isLongEnough = password.length >= 8;
 
-      if (!isLongEnough || !hasUpper || !hasSpecial) {
-        message.textContent = "Password must be at least 8 characters, include an uppercase letter and a special character.";
-        return;
-      }
+  if (!isLongEnough || !hasUpper || !hasSpecial) {
+    message.textContent = "Password must be at least 8 characters, include an uppercase letter and a special character.";
+    return;
+  }
 
-      if (password !== confirmPassword) {
-        message.textContent = "Passwords do not match.";
-        return;
-      }
+  if (password !== confirmPassword) {
+    message.textContent = "Passwords do not match.";
+    return;
+  }
 
-      localStorage.setItem("user_firstName", firstName);
-      localStorage.setItem("user_lastName", lastName);
-      localStorage.setItem("user_age", age);
-      localStorage.setItem("user_gender", gender);
-      localStorage.setItem("user_email", email);
-      localStorage.setItem("user_password", password);
+          try {
+          const response = await fetch("http://localhost:5192/api/user/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name: `${firstName} ${lastName}`,
+              email: email,
+              password: password
+            })
+          });
 
-      message.classList.add("success");
+          if (response.ok) {
+            message.textContent = "Account created successfully!";
+            message.classList.add("success");
 
-      setTimeout(() => {
-        window.location.href = "../Quiz";
-      }, 0);
-    });
-  </script>
-</body>
-</html>
+            setTimeout(async () => {
+              try {
+                localStorage.setItem("user_email", email);
+                localStorage.setItem("user_firstName", firstName);
+                localStorage.setItem("user_lastName", lastName);
+
+                const loginResponse = await fetch("http://localhost:5192/api/user/login", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    email: email,
+                    password: password
+                  })
+                });
+
+                if (loginResponse.ok) {
+                  const user = await loginResponse.text();
+                  localStorage.setItem("jwt_token", user.token); 
+                  window.location.href = "../Quiz";
+                } else {
+                  const loginError = await loginResponse.text();
+                  message.textContent = "Login failed after registration: " + loginError;
+                }
+              } catch (loginErr) {
+                message.textContent = "Auto-login error: " + loginErr.message;
+              }
+            }, 500);
+
+          } else {
+            const error = await response.text();
+            message.textContent = "Registration failed: " + error;
+          }
+        } catch (error) {
+          message.textContent = "An error occurred: " + error.message;
+        }
+      });
+ </script>
+ </body>
+ </html>
 
