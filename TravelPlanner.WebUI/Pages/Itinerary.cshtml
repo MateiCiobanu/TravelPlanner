@@ -362,18 +362,44 @@ function renderDay() {
           random.schedule = timeSlot;
           dayActivities[index] = random;
         } else {
-          dayActivities[index] = {
-            name: "No more suggestions",
-            schedule: timeSlot,
-            todayHours: "",
-            website: "",
-            externalInfoLink: "",
-            category: categoryToRefill,
-            latitude: 0,
-            longitude: 0,
-            googlePlaceId: `empty-${Date.now()}`
-          };
+          const hardcodedSuggestions = [
+            {
+              name: "Walk around the city center",
+              todayHours: "All day",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/City_centre",
+              category: "general",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-1`
+            },
+            {
+              name: "Try a local coffee shop",
+              todayHours: "08:00 - 18:00",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/Coffeehouse",
+              category: "food",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-2`
+            },
+            {
+              name: "Visit a park",
+              todayHours: "Always open",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/Park",
+              category: "nature",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-3`
+            }
+          ];
+
+          const randomFallback = hardcodedSuggestions[Math.floor(Math.random() * hardcodedSuggestions.length)];
+          randomFallback.schedule = timeSlot;
+          dayActivities[index] = randomFallback;
         }
+        
       }
 
         if (pool.length > 0) {
@@ -381,18 +407,42 @@ function renderDay() {
           newActivity.schedule = timeSlot;
           dayActivities[index] = newActivity;
         } else {
-          // fallback to let user add something manually
-          dayActivities[index] = {
-            name: "No more suggestions",
-            schedule: timeSlot,
-            todayHours: "",
-            website: "",
-            externalInfoLink: "",
-            category: categoryToRefill,
-            latitude: 0,
-            longitude: 0,
-            googlePlaceId: `empty-${Date.now()}`
-        };
+          const hardcodedSuggestions = [
+            {
+              name: "Walk around the city center",
+              todayHours: "All day",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/City_centre",
+              category: "general",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-1`
+            },
+            {
+              name: "Try a local coffee shop",
+              todayHours: "08:00 - 18:00",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/Coffeehouse",
+              category: "food",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-2`
+            },
+            {
+              name: "Visit a park",
+              todayHours: "Always open",
+              website: "",
+              externalInfoLink: "https://en.wikipedia.org/wiki/Park",
+              category: "nature",
+              latitude: 0,
+              longitude: 0,
+              googlePlaceId: `hardcoded-3`
+            }
+          ];
+
+          const randomFallback = hardcodedSuggestions[Math.floor(Math.random() * hardcodedSuggestions.length)];
+          randomFallback.schedule = timeSlot;
+          dayActivities[index] = randomFallback;
         }
 
         renderDay();
