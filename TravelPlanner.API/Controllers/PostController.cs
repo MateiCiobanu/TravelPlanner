@@ -41,7 +41,7 @@ namespace TravelPlanner.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePost([FromForm] PostCreateDto postDto)
+        public async Task<IActionResult> CreatePost([FromBody] PostCreateDto postDto)
         {
             try
             {
@@ -50,30 +50,7 @@ namespace TravelPlanner.API.Controllers
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
-
-                string imagePath = null;
-
-                if (postDto.Image != null && postDto.Image.Length > 0)
-                {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(postDto.Image.FileName);
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await postDto.Image.CopyToAsync(stream);
-                    }
-
-                    imagePath = $"/uploads/{fileName}";
-                    Console.WriteLine("Saved imagePath: " + imagePath);
-
-                }
-
                 var postMap = _mapper.Map<Post>(postDto);
-                postMap.ImagePath = imagePath; 
 
                 if (!await _postRepository.CreatePost(postMap))
                 {

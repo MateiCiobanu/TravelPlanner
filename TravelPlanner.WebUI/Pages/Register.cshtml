@@ -313,7 +313,7 @@
                 });
 
                 if (loginResponse.ok) {
-                  const token = await loginResponse.text();
+                   const token = await loginResponse.text();
                   localStorage.setItem("jwt_token", token); 
                   window.location.href = "../Quiz";
                 } else {

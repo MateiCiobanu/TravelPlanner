@@ -17,7 +17,6 @@ using TravelPlanner.WebUI;
 
 
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
@@ -125,18 +124,6 @@ if (Directory.Exists(webUIPath))
         RequestPath = ""
     });
 }
-
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-if (!Directory.Exists(uploadsPath))
-{
-    Directory.CreateDirectory(uploadsPath);
-}
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
-});
-
 app.UseRouting();    
 app.UseCors("AllowAll");
 app.UseAuthorization();

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace TravelPlanner.Application.DTOs
 {
@@ -13,6 +12,5 @@ namespace TravelPlanner.Application.DTOs
         public string GooglePlaceId { get; set; }
         public int UserId { get; set; }
         public DateTime Date { get; set; }
-        public IFormFile Image { get; set; }
     }
 }

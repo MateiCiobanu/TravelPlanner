@@ -260,7 +260,7 @@
       <div class="logo">Travel Planner</div>
     <div style="display: flex; align-items: center; gap: 1rem;">
       <a href="../TravelWall"><img src="media/camera-icon.png" alt="Camera Icon" class="camera-icon"></a>
-      <a href="account.html"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
+      <a href="../Account/Account"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
     </div>
     </header>
 
@@ -318,14 +318,12 @@
     preloadImage.onload = () => {
       document.body.style.backgroundImage = `url('${randomImage}')`;
     };
-
-      async function fetchUserInfoByEmail(email) {
+    async function fetchUserInfoByEmail(email) {
       try {
         const response = await fetch(`http://localhost:5192/api/user/getByEmail/${email}`);
         if (!response.ok) {
           throw new Error("User not found or server error");
         }
-
         const userData = await response.json();
         
         localStorage.setItem("user_id", userData.id);
@@ -350,7 +348,6 @@
         }
     }
     };
-
     let currentSlide = 0;
     const track = document.getElementById('carouselTrack');
     const itemsToShow = 3;
@@ -475,6 +472,18 @@
             messageBox.classList.remove("hidden");
         }
     }
+    window.onload = function () {
+   const firstName = localStorage.getItem("user_firstName");
+    const lastName = localStorage.getItem("user_lastName");
+    const email = localStorage.getItem("user_email");
+    const travelerType = localStorage.getItem("traveler_type");
+
+    console.log("First Name:", firstName);
+    console.log("Last Name:", lastName);
+    console.log("Email:", email);
+    console.log("Traveler Type:", travelerType);
+
+  };
   </script>
    
 </body>

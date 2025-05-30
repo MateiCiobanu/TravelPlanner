@@ -1,0 +1,387 @@
+@page
+@model TravelPlanner.WebUI.Pages.MyTripsModel
+@{
+    ViewData["Title"] = "My Trips";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Trips</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+     html, body {
+    height: 100%;
+    min-height: 100vh;
+    }
+    body {
+    margin: 0;
+    padding: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    display: flex;
+   flex-direction: column;
+   }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      height: 100vh;
+      position: fixed;
+      padding: 2rem 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 3px 0 15px rgba(0,0,0,0.3);
+      border-radius: 0 16px 16px 0;
+      z-index: 1;
+    }
+
+    .profile-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      font-size: 2.7rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    #name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    #username {
+      font-size: 0.9rem;
+      color: #dddddd;
+      margin: 0.4rem 0 1.2rem;
+    }
+
+    .settings {
+      margin-top: auto;
+      width: 100%;
+      position: relative;
+    }
+
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: -1rem;
+      margin-bottom: 1rem;
+      width: 100%;
+      padding: 1rem 1rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .settings-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .settings-toggle::before {
+      content: '\2699';
+      margin-right: 0.6rem;
+      font-size: 1.2rem;
+    }
+
+    .settings-list {
+      display: none;
+      flex-direction: column;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #333;
+      border-radius: 8px;
+      margin: 0.8rem 0;
+      overflow: hidden;
+      list-style-type: none;
+    }
+
+    .settings-list.active {
+      display: flex;
+    }
+
+    .settings-list li {
+      padding: 0.8rem 1.2rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .settings-list li:hover {
+      background-color: #f1f1f1;
+    }
+
+    .main {
+      margin-left: 300px;
+      padding: 3rem 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .trip {
+      background-color: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      position: relative;
+    }
+
+    .trip-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .trip-details {
+      margin: 0.5rem 0 1rem;
+    }
+
+    .trip-actions button {
+      margin-right: 1rem;
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .edit-btn {
+      background-color: #4fc3f7;
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background-color: #039be5;
+    }
+
+    .delete-btn {
+      background-color: #ef5350;
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    .view-btn {
+      background-color: #81c784;
+      color: white;
+    }
+
+    .view-btn:hover {
+      background-color: #388e3c;
+    }
+
+    .no-trips {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #ccc;
+      margin-top: 3rem;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="sidebar">
+    <div class="profile-box">
+      <div class="avatar" id="initial">N</div>
+      <h2 id="name">Name Surname</h2>
+      <p id="username">user</p>
+    </div>
+
+    <div class="settings">
+      <div class="settings-toggle" onclick="toggleSettings()">Settings</div>
+      <ul id="settingsMenu" class="settings-list">
+        <li onclick="goToProfile()">Back to Profile</li>
+        <li onclick="logout()">Log out</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="main">
+    <h3>My Trips</h3>
+    
+    <div id="loading" class="loading">Loading your trips...</div>
+    <div id="tripsContainer"></div>
+    <div id="noTrips" class="no-trips" style="display: none;">
+      You haven't created any trips yet. <br>
+      <a href="../Homepage" style="color: #4fc3f7;">Create your first trip!</a>
+    </div>
+  </div>
+
+  <script>
+    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    const preloadImage = new Image();
+    preloadImage.src = randomImage;
+    preloadImage.onload = () => {
+      document.body.style.backgroundImage = `url('${randomImage}')`;
+    };
+
+    console.log("MyTrips page loaded");
+    
+    const fname = localStorage.getItem("user_firstName") || "Name";
+    const lname = localStorage.getItem("user_lastName") || "Surname";
+    document.getElementById("name").textContent = `${fname} ${lname}`;
+    document.getElementById("initial").textContent = fname.charAt(0).toUpperCase();
+    document.getElementById("username").textContent = fname.toLowerCase();
+
+    function loadTrips() {
+      const loading = document.getElementById("loading");
+      const container = document.getElementById("tripsContainer");
+      const noTrips = document.getElementById("noTrips");
+
+      const savedTripsStr = localStorage.getItem('savedTrips');
+      const savedTrips = JSON.parse(savedTripsStr || '[]');
+
+      if (loading) loading.style.display = "none";
+      if (savedTrips.length === 0) {
+        if (noTrips) noTrips.style.display = "block";
+      } else {
+        savedTrips.forEach(trip => {
+          const tripElement = createTripElement(trip);
+          if (container) container.appendChild(tripElement);
+        });
+        if (noTrips) noTrips.style.display = "none";
+      }
+    }
+
+    function createTripElement(trip) {
+      const div = document.createElement("div");
+      div.className = "trip";
+      div.id = `trip-${trip.id}`;
+      
+      let startDate = trip.startDate ? new Date(trip.startDate).toLocaleDateString() : "N/A";
+      let endDate = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : "N/A";
+      
+      div.innerHTML = `
+        <div class="trip-title">${trip.title || 'Untitled Trip'}</div>
+        <p class="trip-details">${trip.destination || 'Unknown Destination'} – ${startDate} to ${endDate}</p>
+        <div class="trip-actions">
+          <button class="edit-btn" onclick="editTrip(${trip.id})">Edit</button>
+          <button class="delete-btn" onclick="deleteTrip(${trip.id})">Delete</button>
+          <button class="view-btn" onclick="viewTrip(${trip.id})">View</button>
+        </div>
+      `;
+      
+      return div;
+    }
+
+    function deleteTrip(id) {
+      if (confirm("Are you sure you want to delete this trip?")) {
+        let savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
+        savedTrips = savedTrips.filter(trip => trip.id != id);
+        localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
+
+        const tripElement = document.getElementById(`trip-${id}`);
+        if (tripElement) tripElement.remove();
+
+        alert("Trip deleted successfully.");
+
+        if (savedTrips.length === 0) {
+          document.getElementById("noTrips").style.display = "block";
+        }
+      }
+    }
+
+    function editTrip(id) {
+      alert(`Edit functionality for trip ${id} - Not implemented yet`);
+    }
+
+    function viewTrip(id) {
+      const savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
+      const trip = savedTrips.find(t => t.id == id);
+      
+      if (trip) {
+        let details = `Trip: ${trip.title}\nDestination: ${trip.destination}\nDates: ${trip.startDate} to ${trip.endDate}\n\nItinerary:\n`;
+        
+        if (trip.itineraryItems && trip.itineraryItems.length > 0) {
+          trip.itineraryItems.forEach(item => {
+            details += `Day ${item.dayNumber}: ${item.placeName} (${item.startTime} - ${item.endTime})\n`;
+          });
+        } else {
+          details += "No specific itinerary items saved.";
+        }
+        
+        alert(details);
+      }
+    }
+
+    function toggleSettings() {
+      document.getElementById("settingsMenu").classList.toggle("active");
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '../Index';
+    }
+
+    function goToProfile() {
+      window.location.href = '../Account/Account';
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadTrips);
+    } else {
+      loadTrips();
+    }
+  </script>
+</body>
+</html>
