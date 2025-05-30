@@ -1,11 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using TravelPlanner.Application.DTOs;
-using TravelPlanner.Application.Services;
 using Microsoft.Extensions.Logging;
-using TravelPlanner.Domain.Models;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http;
+using Microsoft.Extensions.Http;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace TravelPlanner.Application.Services
 {
@@ -15,13 +17,18 @@ namespace TravelPlanner.Application.Services
         private readonly ILogger<ItinerarySuggestionService> _logger;
         private readonly Random _random = new Random();
 
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
 
         public ItinerarySuggestionService(
             GooglePlacesService googlePlacesService,
-            ILogger<ItinerarySuggestionService> logger)
+            ILogger<ItinerarySuggestionService> logger,
+            IHttpClientFactory httpClientFactory)
         {
             _googlePlacesService = googlePlacesService;
             _logger = logger;
+            _httpClient = httpClientFactory.CreateClient();
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<PlaceSuggestionsResponseDto> GenerateSuggestionsAsync(PlaceSuggestionRequestDto request)
@@ -34,6 +41,8 @@ namespace TravelPlanner.Application.Services
 
             int totalDays = (int)(request.EndDate - request.StartDate).TotalDays + 1;
             _logger.LogInformation($"Trip duration: {totalDays} days");
+
+            // response.ExternalInfoLink = await GetWikipediaLink(request.Destination);
 
 
             var preferredCategories = new List<string>();
@@ -164,7 +173,7 @@ namespace TravelPlanner.Application.Services
                 while (activitiesAdded < maxActivities)
                 {
                     var shuffledCategories = preferredCategories.OrderBy(c => _random.Next()).ToList();
-                    
+
                     foreach (var category in shuffledCategories)
                     {
                         if (usedCategories.Contains(category)) continue;
@@ -177,7 +186,7 @@ namespace TravelPlanner.Application.Services
                         if (selected.Any())
                         {
                             var place = selected.First();
-                            usedPlaceIds.Add(place.GooglePlaceId); 
+                            usedPlaceIds.Add(place.GooglePlaceId);
 
                             // Optional: assign a suggested time range
                             var weekdayIndex = (int)currentDate.DayOfWeek; // Sunday = 0
@@ -186,6 +195,7 @@ namespace TravelPlanner.Application.Services
 
                             place.Schedule = $"{8 + (activitiesAdded * 2)}:00 - {10 + (activitiesAdded * 2)}:00"; // Basic slot logic
                             place.TodayHours = todayHours;
+                            place.ExternalInfoLink = await GetWikipediaUrlAsync(place.Name);
 
                             dailySuggestion.Places.Add(place);
                             usedCategories.Add(category);
@@ -215,7 +225,7 @@ namespace TravelPlanner.Application.Services
                 .Take(Math.Min(count, places.Count))
                 .ToList();
         }
-        
+
         private int GetMaxActivitiesPerDay(string hours)
         {
             if (string.IsNullOrWhiteSpace(hours))
@@ -231,5 +241,34 @@ namespace TravelPlanner.Application.Services
 
             return 3; // default/fallback
         }
+
+        private async Task<string?> GetWikipediaUrlAsync(string placeName)
+{
+    try
+    {
+        var client = _httpClientFactory.CreateClient();
+        string apiUrl = $"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={Uri.EscapeDataString(placeName)}&format=json";
+
+        var response = await client.GetAsync(apiUrl);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+
+        var searchResults = doc.RootElement.GetProperty("query").GetProperty("search");
+        if (searchResults.GetArrayLength() > 0)
+        {
+            var topResult = searchResults[0];
+            var title = topResult.GetProperty("title").GetString();
+            return $"https://en.wikipedia.org/wiki/{Uri.EscapeDataString(title.Replace(' ', '_'))}";
+        }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogWarning($"Wikipedia search failed for {placeName}: {ex.Message}");
+    }
+
+    return null;
+}
     }
 }

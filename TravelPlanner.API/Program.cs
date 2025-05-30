@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddHttpClient<GooglePlacesService>();
-builder.Services.AddHttpClient<GooglePlacesService>();
+
 
 var app = builder.Build();
 
