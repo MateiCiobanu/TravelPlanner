@@ -347,7 +347,6 @@
       <div class="info-item trips" id="tripsRedirect">
         <span class="material-icons">location_on</span>
         <span class="info-title">Trips</span>
-        <span class="info-count" id="tripsCount">0</span>
       </div>
     </div>
 
@@ -456,26 +455,21 @@
     }
 
    
-    async function loadUserData() {
-
+      async function loadUserData() {
       await getUserFromToken();
-      
+
       const fname = localStorage.getItem("user_firstName") || "User";
       const lname = localStorage.getItem("user_lastName") || "Name";
-      const age = localStorage.getItem("user_age") || "25";
-      const gender = localStorage.getItem("user_gender") || "Not specified";
       const email = localStorage.getItem("user_email") || "user@example.com";
+      const travelerType = localStorage.getItem("user_traveler_type") || "Explorer";
 
-      console.log("Loading user data:", fname, lname, age, gender, email);
+      const username = fname+lname;
 
-     
       document.getElementById("name").textContent = fname + " " + lname;
       document.getElementById("initial").textContent = fname.charAt(0).toUpperCase();
-      document.getElementById("fullname").textContent = fname + " " + lname;
-      document.getElementById("age").textContent = age;
-      document.getElementById("gender").textContent = gender;
-      document.getElementById("emailinfo").textContent = email;
-      document.getElementById("usernameText").textContent = fname.toLowerCase();
+      document.getElementById("usernameText").textContent = username;
+      document.getElementById("travelerType").textContent = travelerType;
+      document.getElementById("typeDescription").textContent = "Your personalized travel style based on your preferences.";
     }
 
 
@@ -666,7 +660,6 @@
     async function loadTripCount() {
       try {
         document.getElementById('tripsCount').textContent = '2';
-        document.getElementById('countriesCount').textContent = '3';
       } catch (error) {
         console.error('Error loading trip count:', error);
       }
