@@ -9,5 +9,6 @@ namespace TravelPlanner.Application.DTOs
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public List<ItineraryItemDto> ItineraryItems { get; set; } = new();
+        public List<string> FriendEmails { get; set; } = new();
     }
 }

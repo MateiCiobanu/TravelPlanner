@@ -517,12 +517,15 @@ function showActivityInfo(activity) {
     });
   });
 
+  const people = JSON.parse(localStorage.getItem("itinerary_people") || "[]");
+
   const body = {
     userId: parseInt(userId),
     destination: city,
     startDate: start,
     endDate: end,
-    itineraryItems: itineraryItems
+    itineraryItems: itineraryItems,
+    friendEmails: people 
   };
 
 console.log("Saving trip with payload:", JSON.stringify(body, null, 2));

@@ -34,5 +34,10 @@ namespace TravelPlanner.Infrastructure.Repositories
             var saved = await _context.SaveChangesAsync();
             return saved > 0;
         }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
     }
 }
