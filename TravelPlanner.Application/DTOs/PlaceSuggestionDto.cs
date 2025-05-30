@@ -17,5 +17,6 @@ namespace TravelPlanner.Application.DTOs
         public string? FormattedPhoneNumber { get; set; }
         public string? InternationalPhoneNumber { get; set; }
         public string? Website { get; set; }
+        public string? ExternalInfoLink { get; set; }
     }
 }

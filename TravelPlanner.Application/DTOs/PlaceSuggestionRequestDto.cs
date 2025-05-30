@@ -14,7 +14,10 @@ namespace TravelPlanner.Application.DTOs
 
         [Required]
         public TravelerTypeDto? TravelerType { get; set; } // HAS TO BE REQURIED AFTER IMPLEMENTING THE PROFILE PAGE SO WE CAN FETCH THE TYPE 
-        
+
         public string? EstimatedHoursPerDay { get; set; }
+
+        public string? ExternalInfoLink { get; set; }
+
     }
 }

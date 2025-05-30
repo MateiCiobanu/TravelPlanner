@@ -270,6 +270,7 @@
   const activitiesByDay = {};
   itineraryData.dailySuggestions.forEach(day => {
   activitiesByDay[day.dayNumber] = day.places.map(p => ({
+    googlePlaceId: p.googlePlaceId, 
     name: p.name,
     schedule: p.schedule,
     todayHours: p.todayHours,
@@ -279,14 +280,15 @@
     phoneIntl: p.internationalPhoneNumber || "",  // ✅ this must match DTO key
     phoneNational: p.formattedPhoneNumber || "",  // ✅ this too
     website: p.website || "",
-    category: p.category || ""
+    category: p.category || "",
+    externalInfoLink: p.externalInfoLink || ""
   }));
 });
 
   const getUsedPlaceIds = () =>
-    new Set(Object.values(activitiesByDay)
+  new Set(Object.values(activitiesByDay)
       .flatMap(day => day)
-      .filter(Boolean)
+      .filter(p => p && p.googlePlaceId)
       .map(p => p.googlePlaceId));
 
   const activityInfo = {
@@ -338,26 +340,62 @@ function renderDay() {
     else {
       const span = createActivitySpan(activity);
       const deleteBtn = createDeleteButton(() => {
-      const deletedActivity = dayActivities[index];
-      const categoryToRefill = deletedActivity.category;
-      const timeSlot = deletedActivity.schedule;
+        const deletedActivity = dayActivities[index];
+        const categoryToRefill = deletedActivity.category;
+        const timeSlot = deletedActivity.schedule;
 
-      // Replace deleted activity with a new one from same category
-      const usedIds = getUsedPlaceIds();
-      const pool = itineraryData.dailySuggestions
-        .flatMap(day => day.places)
-        .filter(p => p.category === categoryToRefill && !usedIds.has(p.googlePlaceId));
+        const usedIds = getUsedPlaceIds();
+        
+        // Flatten all days and extract ALL activities from the full itinerary data
+        const allAvailable = itineraryData.dailySuggestions.flatMap(day => day.places);
 
-      const newActivity = pool[Math.floor(Math.random() * pool.length)];
+        // Filter by category and time slot, and exclude already used IDs
+        const pool = allAvailable.filter(p =>
+          p.category === categoryToRefill &&
+          !usedIds.has(p.googlePlaceId)
+        );
 
-      if (newActivity) {
-        newActivity.schedule = timeSlot;
-        dayActivities[index] = newActivity;
-      } else {
-        dayActivities[index] = null; // fallback if none available
+        if (pool.length === 0) {
+        const fallback = allAvailable.filter(p => !usedIds.has(p.googlePlaceId));
+        if (fallback.length > 0) {
+          const random = fallback[Math.floor(Math.random() * fallback.length)];
+          random.schedule = timeSlot;
+          dayActivities[index] = random;
+        } else {
+          dayActivities[index] = {
+            name: "No more suggestions",
+            schedule: timeSlot,
+            todayHours: "",
+            website: "",
+            externalInfoLink: "",
+            category: categoryToRefill,
+            latitude: 0,
+            longitude: 0,
+            googlePlaceId: `empty-${Date.now()}`
+          };
+        }
       }
 
-      renderDay();
+        if (pool.length > 0) {
+          const newActivity = pool[Math.floor(Math.random() * pool.length)];
+          newActivity.schedule = timeSlot;
+          dayActivities[index] = newActivity;
+        } else {
+          // fallback to let user add something manually
+          dayActivities[index] = {
+            name: "No more suggestions",
+            schedule: timeSlot,
+            todayHours: "",
+            website: "",
+            externalInfoLink: "",
+            category: categoryToRefill,
+            latitude: 0,
+            longitude: 0,
+            googlePlaceId: `empty-${Date.now()}`
+        };
+        }
+
+        renderDay();
     });
 
       wrapper.appendChild(span);
@@ -466,6 +504,7 @@ function showActivityInfo(activity) {
       ${safe(activity.phoneIntl) ? `<p><strong>📞 Intl:</strong> ${activity.phoneIntl}</p>` : ""}
       ${safe(activity.phoneNational) ? `<p><strong>📞 Local:</strong> ${activity.phoneNational}</p>` : ""}
       ${safe(activity.website) ? `<p><a href="${activity.website}" target="_blank" style="color: #2482c8;">🌐 Website</a></p>` : ""}
+      ${safe(activity.externalInfoLink) ? `<p><a href="${activity.externalInfoLink}" target="_blank" style="color: #2482c8;">📖 Wikipedia</a></p>` : ""}
       ${activity.category?.toLowerCase().includes("museum") || activity.category?.toLowerCase().includes("art") || activity.category?.toLowerCase().includes("gallery") ? `<p><strong>🏛️ Type:</strong> Cultural</p>` : ""}
     </div>
   `;
@@ -615,6 +654,8 @@ itineraryData.dailySuggestions.forEach(day => {
     console.log(`   - Local: ${p.formattedPhoneNumber}`);
     console.log(`   - Website: ${p.website}`);
     console.log(`   - Hours: ${p.openingHours?.join("; ")}`);
+    console.log(`   - Wikipedia: ${p.externalInfoLink}`);
+    console.log("RAW DATA:", itineraryData.dailySuggestions);
   });
 });
 
