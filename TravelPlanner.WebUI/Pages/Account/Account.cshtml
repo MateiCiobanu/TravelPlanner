@@ -349,11 +349,6 @@
         <span class="info-title">Trips</span>
         <span class="info-count" id="tripsCount">0</span>
       </div>
-      <div class="info-item countries">
-        <span class="material-icons">public</span>
-        <span class="info-title">Countries</span>
-        <span class="info-count" id="countriesCount">0</span>
-      </div>
     </div>
 
     <div class="settings">
@@ -366,7 +361,6 @@
   </div>
 
   <div class="main">
-    <!-- Home icon top-right -->
     <div class="top-right">
       <a href="../Homepage" title="Go to Homepage">
         <span class="material-icons home-icon">home</span>
@@ -397,7 +391,7 @@
   </div>
 
   <script>
-    // JWT token'dan kullanıcı bilgilerini getir
+  
     async function getUserFromToken() {
       const token = localStorage.getItem("jwt_token");
       if (!token) {

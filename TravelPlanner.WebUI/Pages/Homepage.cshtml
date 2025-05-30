@@ -310,7 +310,29 @@
     preloadImage.onload = () => {
       document.body.style.backgroundImage = `url('${randomImage}')`;
     };
-
+    async function fetchUserInfoByEmail(email) {
+      try {
+        const response = await fetch(`http://localhost:5192/api/user/getByEmail/${email}`);
+        if (!response.ok) {
+          throw new Error("User not found or server error");
+        }
+        const userData = await response.json();
+        
+        localStorage.setItem("user_id", userData.id);
+        localStorage.setItem("traveler_type", userData.travelerType);
+        return userData;
+      } catch (err) {
+        console.error("Error fetching user info:", err.message);
+        return null;
+      }
+    }
+    
+    window.onload = async function () {
+    const email = localStorage.getItem("user_email");
+    if (email) {
+      await fetchUserInfoByEmail(email);
+    }
+    };
     let currentSlide = 0;
     const track = document.getElementById('carouselTrack');
     const itemsToShow = 3;
@@ -362,44 +384,41 @@
     });
 
     let timeoutId;
-// Homepage.cshtml script section'ında validateInputs fonksiyonunu değiştir:
 
 function validateInputs() {
-  const city = document.getElementById("cityInput").value.trim();
-  const start = document.getElementById("startDate").value;
-  const end = document.getElementById("endDate").value;
-  const people = document.getElementById("peopleInput").value;
+      const city = document.getElementById("cityInput").value.trim();
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      const people = document.getElementById("peopleInput").value;
+      let valid = city && start && end && people;
+      if (parseInt(people) > 1) {
+        valid = valid && personInputs.every(input => input.value.trim() !== "");
+      }
+      const messageBox = document.getElementById("errorMessage");
+      if (!valid) {
+        messageBox.textContent = "Please complete all fields before creating the itinerary.";
+        messageBox.classList.remove("hidden");
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          messageBox.classList.add("hidden");
+        }, 800);
+      } else {
+        messageBox.classList.add("hidden");
+        window.location.href = "/Itinerary";
+      }
+    }
+    window.onload = function () {
+   const firstName = localStorage.getItem("user_firstName");
+    const lastName = localStorage.getItem("user_lastName");
+    const email = localStorage.getItem("user_email");
+    const travelerType = localStorage.getItem("traveler_type");
 
-  let valid = city && start && end && people;
-  if (parseInt(people) > 1) {
-    valid = valid && personInputs.every(input => input.value.trim() !== "");
-  }
+    console.log("First Name:", firstName);
+    console.log("Last Name:", lastName);
+    console.log("Email:", email);
+    console.log("Traveler Type:", travelerType);
 
-  const messageBox = document.getElementById("errorMessage");
-  if (!valid) {
-    messageBox.textContent = "Please complete all fields before creating the itinerary.";
-    messageBox.classList.remove("hidden");
-
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      messageBox.classList.add("hidden");
-    }, 800);
-  } else {
-    messageBox.classList.add("hidden");
-    
-    // Store trip details in localStorage for the itinerary page
-    const tripData = {
-      destination: city,
-      startDate: start,
-      endDate: end,
-      peopleCount: people,
-      peopleEmails: personInputs.map(input => input.value.trim())
-    };
-    
-    localStorage.setItem('currentTripData', JSON.stringify(tripData));
-    window.location.href = "/Itinerary";
-  }
-}
+  };
   </script>
    
 </body>

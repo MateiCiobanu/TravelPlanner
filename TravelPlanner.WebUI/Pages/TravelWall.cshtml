@@ -220,14 +220,6 @@ header {
       text-align: left;
     }
 
-    .comment {
-      font-size: 0.9rem;
-      color: #444;
-      background-color: #efefef;
-      padding: 0.5rem 0.8rem;
-      border-radius: 8px;
-      margin-bottom: 0.3rem;
-    }
 
     .show-more {
       background: none;
@@ -321,6 +313,31 @@ header {
   background-color: #1d6fab;
 }
 
+.comment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #444;
+  background-color: #efefef;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+}
+
+.comment-text {
+  flex: 1;
+  margin-right: 1rem;
+}
+.comment.extra-comment {
+  display: none;
+}
+
+.comment.extra-comment.visible {
+  display: flex !important;
+}
+
+
 
   </style>
 </head>
@@ -332,7 +349,7 @@ header {
       <div class="logo">Travel Planner</div>
       <div style="display: flex; align-items: center; gap: 1rem;">
         <a href="../TravelWall"><img src="media/camera-icon.png" alt="Camera Icon" class="camera-icon"></a>
-      <a href="../Account/Account"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
+        <a href="../Account/Account"><img src="media/user-icon.png" alt="User Account" class="user-icon"></a>
       </div>
     </header>
 
@@ -341,37 +358,7 @@ header {
   </main>
 
   <section class="wall-container">
-    @foreach (var post in Model.Posts)
-    {
-      <div class="post">
-        <div class="post-header">
-          <div class="username">@post.Username</div>
-          <div class="traveler-type">@post.TravelerType</div>
-          <div class="post-date">@post.PostDate</div>
-          <div class="post-location">📍 @post.Location</div>
-        </div>
-        <img src="@post.ImagePath" alt="Post Image" class="post-image" onclick="viewImage(this.src)">
-        <button class="like-button" onclick="toggleLike(this)">♡</button>
-
-        <div class="comments">
-          @for (int i = 0; i < post.Comments.Count; i++)
-          {
-              var comment = post.Comments[i];
-              var isExtra = i >= 2;
-              <div class="comment @(isExtra ? "extra-comment" : "")" style="@(isExtra ? "display:none;" : "")">@comment</div>
-          }
-          @if (post.Comments.Count > 2)
-          {
-              <button class="show-more" onclick="toggleComments(this)">Show more</button>
-          }
-        </div>
-       <div class="comment-input-wrapper">
-         <input type="text" class="comment-input" placeholder="Write a comment..." />
-         <button class="submit-comment-button" onclick="submitComment(this)">Post</button>
-        </div>
-
-      </div>
-    }
+   <div id="postContainer" class="wall-container"></div>
   </section>
   <button class="fab" onclick="openPostForm()">＋</button>
 
@@ -381,6 +368,7 @@ header {
   <div id="postForm" class="modal">
   <div class="modal-content">
     <h3>Create a New Post</h3>
+    <input type="text" id="titleInput" placeholder="Title">
     <input type="text" id="locationInput" placeholder="Location">
     <input type="file" id="imageInput">
     <button onclick="submitPost()">Submit</button>
@@ -408,7 +396,101 @@ header {
       viewerImg.src = src;
       viewer.style.display = "flex";
     }
+          async function isPostLiked(postId, button) {
+        const token = localStorage.getItem("jwt_token");
+        const userId = localStorage.getItem("user_id");
 
+        try {
+          const res = await fetch(`http://localhost:5192/api/Post/isLiked?userId=${userId}&postId=${postId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (res.ok) {
+            const isLiked = await res.json();
+            if (isLiked === true) {
+              button.classList.add("liked");
+              button.textContent = "❤️";
+            }
+          }
+        } catch (err) {
+          console.warn("Could not verify like status:", err);
+        }
+      }
+
+
+      async function toggleCommentLike(button, commentId) {
+      const token = localStorage.getItem("jwt_token");
+      const userId = localStorage.getItem("user_id");
+      const isLiked = button.classList.contains("liked");
+
+      const likeData = {
+        userId: parseInt(userId),
+        commentId: parseInt(commentId),
+        type: true
+      };
+
+      try {
+        if (!isLiked) {
+          const response = await fetch("http://localhost:5192/api/Comment/like", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(likeData)
+          });
+
+          if (!response.ok) throw new Error("Failed to like comment");
+          button.classList.add("liked");
+          button.textContent = "❤️";
+        } else {
+          const response = await fetch("http://localhost:5192/api/Comment/unlike", {
+            method: "DELETE",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              userId: parseInt(userId),
+              commentId: parseInt(commentId)
+            })
+          });
+
+          if (!response.ok) throw new Error("Failed to unlike comment");
+          button.classList.remove("liked");
+          button.textContent = "♡";
+        }
+      } catch (err) {
+        console.error("Comment like toggle failed:", err);
+      }
+    }
+    
+      async function isCommentLiked(commentId, button) {
+      const token = localStorage.getItem("jwt_token");
+      const userId = localStorage.getItem("user_id");
+
+      try {
+        const res = await fetch(`http://localhost:5192/api/Comment/isLiked?userId=${userId}&commentId=${commentId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const liked = await res.json();
+          if (liked === true) {
+            button.classList.add("liked");
+            button.textContent = "❤️";
+          }
+        }
+      } catch (err) {
+        console.warn("Could not check comment like status:", err);
+      }
+    }
+
+      
     function toggleComments(button) {
       const comments = button.parentElement.querySelectorAll(".extra-comment");
       const isHidden = comments[0].style.display === "none";
@@ -416,44 +498,252 @@ header {
       button.textContent = isHidden ? "Show less" : "Show more";
     }
     function openPostForm() {
-  document.getElementById('postForm').style.display = 'flex';
-}
-function closePostForm() {
-  document.getElementById('postForm').style.display = 'none';
-}
-
-function submitPost() {
-  const location = document.getElementById('locationInput').value;
-  const imageInput = document.getElementById('imageInput');
-  const imageFile = imageInput.files[0];
-
-  if (!location || !imageFile) {
-    alert('All fields are required.');
-    return;
-  }
-
-  alert('Post created! (simulate backend call)');
-
-  closePostForm();
-  location.reload(); 
-}
- function submitComment(button) {
+      document.getElementById('postForm').style.display = 'flex';
+    }
+    function closePostForm() {
+      document.getElementById('postForm').style.display = 'none';
+    }
+    async function submitComment(button) {
   const wrapper = button.parentElement;
   const input = wrapper.querySelector('.comment-input');
   const commentText = input.value.trim();
+  const postWrapper = wrapper.closest('.post');
+  const postId = postWrapper.dataset.postId;
+  const userId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("jwt_token");
 
-  if (!commentText) return;
+  if (!commentText || !postId || !userId || !token) {
+    alert("Missing required data or not logged in.");
+    return;
+  }
 
-  const newComment = document.createElement('div');
-  newComment.className = 'comment';
-  newComment.textContent = commentText;
+  const commentData = {
+    content: commentText,
+    userId: parseInt(userId),
+    postId: parseInt(postId),
+    date: new Date().toISOString()
+  };
 
-  const commentsSection = wrapper.parentElement.querySelector('.comments');
-  commentsSection.appendChild(newComment);
+  try {
+    const response = await fetch("http://localhost:5192/api/Comment/create", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(commentData)
+    });
 
-  input.value = ''; 
+    if (!response.ok) throw new Error("Failed to post comment.");
+
+
+    const commentEl = document.createElement("div");
+    commentEl.className = "comment";
+
+    const commentTextEl = document.createElement("span");
+    commentTextEl.className = "comment-text";
+    commentTextEl.textContent = commentText;
+    commentEl.appendChild(commentTextEl);
+
+    const likeBtn = document.createElement("button");
+    likeBtn.className = "like-button";
+    likeBtn.textContent = "♡";
+    likeBtn.onclick = () => toggleCommentLike(likeBtn, commentData.commentId); 
+    commentEl.appendChild(likeBtn);
+
+  
+    const commentsSection = postWrapper.querySelector('.comments');
+    commentsSection.insertBefore(commentEl, commentsSection.querySelector(".show-more")); 
+
+
+    input.value = '';
+
+  } catch (error) {
+    alert("Error posting comment: " + error.message);
+  }
 }
 
+        async function loadComments(postId, container) {
+      const token = localStorage.getItem("jwt_token");
+
+      try {
+        const res = await fetch(`http://localhost:5192/api/comment?postId=${postId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Failed to load comments");
+
+        const comments = await res.json();
+
+        comments.forEach((comment, index) => {
+          const commentEl = document.createElement('div');
+          commentEl.className = 'comment';
+          commentEl.innerHTML = `
+            <span class="comment-text">${comment.content}</span>
+          `;
+
+          if (index >= 2) {
+            commentEl.classList.add("extra-comment");
+            commentEl.style.display = "none";
+          }
+
+          const commentLikeBtn = document.createElement("button");
+          commentLikeBtn.className = "like-button";
+          commentLikeBtn.textContent = "♡";
+          commentLikeBtn.onclick = () => toggleCommentLike(commentLikeBtn, comment.id);
+          commentEl.appendChild(commentLikeBtn);
+          isCommentLiked(comment.id, commentLikeBtn);
+
+          container.appendChild(commentEl);
+        });
+
+        if (comments.length > 2) {
+          const showMoreBtn = document.createElement("button");
+          showMoreBtn.className = "show-more";
+          showMoreBtn.textContent = "Show more";
+          showMoreBtn.onclick = () => {
+            const extraComments = container.querySelectorAll(".extra-comment");
+            const isHidden = !extraComments[0].classList.contains("visible");
+
+            extraComments.forEach(c => {
+              if (isHidden) {
+                c.classList.add("visible");
+              } else {
+                c.classList.remove("visible");
+              }
+            });
+
+            showMoreBtn.textContent = isHidden ? "Show less" : "Show more";
+          };
+          container.appendChild(showMoreBtn);
+        }
+
+      } catch (err) {
+        console.error("Error loading comments for post", postId, err);
+      }
+    }
+
+
+
+    function displayPosts(posts) {
+      const container = document.getElementById("postContainer");
+      container.innerHTML = "";
+      const token = localStorage.getItem("jwt_token");
+      posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      posts.forEach(post => {
+        console.log(post);
+        const wrapper = document.createElement("div");
+        wrapper.className = "post";
+        wrapper.dataset.postId = post.id;
+        wrapper.innerHTML = `
+          <div class="post-header">
+            <div class="username" id="user-${post.userId}-${post.id}">Loading...</div>
+            <div class="post-date">${new Date(post.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
+            <div class="post-location">📍 ${post.googlePlaceId}</div>
+          </div>
+          <img src="http://localhost:5192${post.imagePath}" alt="Post Image" class="post-image" onclick="viewImage('http://localhost:5192${post.imagePath}')">
+          <h3 style="margin: 0.5rem 0;">${post.title}</h3>
+          <div class="comments"></div>
+          <div class="comment-input-wrapper">
+            <input type="text" class="comment-input" placeholder="Write a comment..." />
+            <button class="submit-comment-button" onclick="submitComment(this)">Post</button>
+          </div>
+        `;
+
+        container.appendChild(wrapper);
+        if (post.userId) {
+       fetch(`http://localhost:5192/api/user/${post.userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById(`user-${post.userId}-${post.id}`).textContent = data.email;
+          })
+          .catch(() => {
+            document.getElementById(`user-${post.userId}-${post.id}`).textContent = "Unknown";
+          });
+      }
+
+       const commentsSection = wrapper.querySelector(".comments");
+       loadComments(post.id, commentsSection);
+    });
+      
+    }
+
+    async function fetchPosts() {
+        try {
+          const token = localStorage.getItem("jwt_token");
+
+          const response = await fetch("http://localhost:5192/api/Post", {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch posts");
+          }
+
+          const posts = await response.json();
+          displayPosts(posts);
+        } catch (err) {
+          console.error("Error loading posts:", err);
+        }
+        
+      }
+
+
+      async function submitPost() {
+      const location = document.getElementById('locationInput').value.trim();
+      const title = document.getElementById('titleInput').value.trim();
+      const imageInput = document.getElementById('imageInput');
+      const imageFile = imageInput.files[0];
+
+      const token = localStorage.getItem("jwt_token");
+      const userId = localStorage.getItem("user_id"); 
+
+      if (!token) {
+        alert("You must be logged in to create a post.");
+        return;
+      }
+
+      if (!location || !imageFile || !title || !userId) {
+        alert('All fields are required.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("GooglePlaceId", location);
+      formData.append("Title", title);
+      formData.append("UserId", userId);  
+      formData.append("Date", new Date().toISOString());
+      formData.append("Image", imageFile);
+
+      try {
+        const response = await fetch("http://localhost:5192/api/post/create", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (response.ok) {
+          alert("Post created successfully!");
+          closePostForm();
+          window.location.reload();
+        } else {
+          const error = await response.text();
+          alert("Failed to create post: " + error);
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    window.onload = () => {
+      fetchPosts();
+    };
   </script>
 </body>
 </html>
