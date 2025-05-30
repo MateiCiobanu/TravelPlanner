@@ -86,7 +86,7 @@ namespace TravelPlanner.API.Controllers
                     request.EndDate
                 );
 
-                if (friendExistingTrip != null) continue; // 🛑 Skip if already saved
+                if (friendExistingTrip != null) continue; 
 
                 var friendTrip = new Trip
                 {
