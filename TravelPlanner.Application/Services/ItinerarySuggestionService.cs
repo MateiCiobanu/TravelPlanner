@@ -9,7 +9,7 @@ using TravelPlanner.Domain.Models;
 
 namespace TravelPlanner.Application.Services
 {
-    public class ItinerarySuggestionService 
+    public class ItinerarySuggestionService
     {
         private readonly GooglePlacesService _googlePlacesService;
         private readonly ILogger<ItinerarySuggestionService> _logger;
@@ -29,7 +29,9 @@ namespace TravelPlanner.Application.Services
             _logger.LogInformation($"Generating itinerary suggestions for {request.Destination} from {request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}");
             _logger.LogWarning($"Received traveler type: {request.TravelerType?.TravelerTypeName}");
             var response = new PlaceSuggestionsResponseDto();
-            
+
+            var usedPlaceIds = new HashSet<string>();
+
             int totalDays = (int)(request.EndDate - request.StartDate).TotalDays + 1;
             _logger.LogInformation($"Trip duration: {totalDays} days");
 
@@ -70,7 +72,7 @@ namespace TravelPlanner.Application.Services
                                                                 "art_gallery" };
                     break;
                 case "nature enthusiast":
-                    preferredCategories = new List<string> {    "park", "campground", 
+                    preferredCategories = new List<string> {    "park", "campground",
                                                                 "scenic_lookout", "zoo",
                                                                 "aquarium", "gym", "spa",
                                                                 };
@@ -95,28 +97,40 @@ namespace TravelPlanner.Application.Services
             }
 
             var allPlacesByCategory = new Dictionary<string, List<PlaceSuggestion>>();
-            
+
             foreach (var category in preferredCategories)
             {
                 try
                 {
                     var searchQuery = $"{category} in {request.Destination}";
                     var places = await _googlePlacesService.GetPlacesAsync(searchQuery, request.Destination);
-                    
+
                     if (places != null && places.Count > 0)
                     {
-                        allPlacesByCategory[category] = places.Select(p => new PlaceSuggestion
+                        var detailedPlaces = new List<PlaceSuggestion>();
+
+                        foreach (var p in places)
                         {
-                            GooglePlaceId = p.PlaceId,
-                            Name = p.Name,
-                            Category = category,
-                            Address = p.Address,
-                            Rating = p.Rating,
-                            Latitude = p.Latitude,
-                            Longitude = p.Longitude
-                        }).ToList();
-                        
-                        _logger.LogInformation($"Found {allPlacesByCategory[category].Count} places for category '{category}'");
+                            var detail = await _googlePlacesService.GetPlaceDetailedInfoAsync(p.PlaceId);
+
+                            detailedPlaces.Add(new PlaceSuggestion
+                            {
+                                GooglePlaceId = p.PlaceId,
+                                Name = p.Name,
+                                Category = category,
+                                Address = p.Address,
+                                Rating = p.Rating,
+                                Latitude = p.Latitude,
+                                Longitude = p.Longitude,
+                                FormattedPhoneNumber = detail.NationalPhoneNumber ?? "",
+                                InternationalPhoneNumber = detail.InternationalPhoneNumber ?? "",
+                                Website = detail.WebsiteUri ?? "",
+                                OpeningHours = detail.OpeningHours ?? new List<string>()
+                            });
+                        }
+
+                        allPlacesByCategory[category] = detailedPlaces;
+                        _logger.LogInformation($"Found {detailedPlaces.Count} places for category '{category}'");
                     }
                     else
                     {
@@ -142,31 +156,46 @@ namespace TravelPlanner.Application.Services
                 };
 
                 // Randomly pick morning, lunch, afternoon, dinner from allowed categories
-                foreach (var slot in new[] { "morning", "lunch", "afternoon", "dinner" })
+                int maxActivities = GetMaxActivitiesPerDay(request.EstimatedHoursPerDay);
+
+                var usedCategories = new HashSet<string>();
+                int activitiesAdded = 0;
+
+                while (activitiesAdded < maxActivities)
                 {
                     var shuffledCategories = preferredCategories.OrderBy(c => _random.Next()).ToList();
-                    bool added = false;
-
+                    
                     foreach (var category in shuffledCategories)
                     {
+                        if (usedCategories.Contains(category)) continue;
+
                         var pool = allPlacesByCategory.GetValueOrDefault(category, new List<PlaceSuggestion>());
-                        if (pool == null || pool.Count == 0) continue;
+                        if (pool.Count == 0) continue;
 
-                        var neededCount = slot == "lunch" || slot == "dinner" ? 1 : _random.Next(1, 3);
-                        var selected = GetRandomPlaces(pool, neededCount);
-
+                        var available = pool.Where(p => !usedPlaceIds.Contains(p.GooglePlaceId)).ToList();
+                        var selected = GetRandomPlaces(available, 1);
                         if (selected.Any())
                         {
-                            dailySuggestion.Places.AddRange(selected);
-                            added = true;
+                            var place = selected.First();
+                            usedPlaceIds.Add(place.GooglePlaceId); 
+
+                            // Optional: assign a suggested time range
+                            var weekdayIndex = (int)currentDate.DayOfWeek; // Sunday = 0
+                            if (weekdayIndex == 0) weekdayIndex = 7; // Google API starts from Monday = 1
+                            string todayHours = place.OpeningHours.ElementAtOrDefault(weekdayIndex - 1) ?? "Hours not available";
+
+                            place.Schedule = $"{8 + (activitiesAdded * 2)}:00 - {10 + (activitiesAdded * 2)}:00"; // Basic slot logic
+                            place.TodayHours = todayHours;
+
+                            dailySuggestion.Places.Add(place);
+                            usedCategories.Add(category);
+                            activitiesAdded++;
                             break;
                         }
                     }
 
-                    if (!added)
-                    {
-                        _logger.LogWarning($"No suitable activity found for {slot} on Day {day} for type '{travelerTypeName}'");
-                    }
+                    if (usedCategories.Count == preferredCategories.Count)
+                        break; // prevent infinite loop if all categories are exhausted
                 }
 
                 response.DailySuggestions.Add(dailySuggestion);
@@ -185,6 +214,22 @@ namespace TravelPlanner.Application.Services
                 .OrderBy(x => _random.Next())
                 .Take(Math.Min(count, places.Count))
                 .ToList();
+        }
+        
+        private int GetMaxActivitiesPerDay(string hours)
+        {
+            if (string.IsNullOrWhiteSpace(hours))
+                return 3; // fallback
+
+            hours = hours.Replace("–", "-").Trim().ToLowerInvariant();
+
+            if (hours.Contains("0-1") || hours.Contains("0")) return 1;
+            if (hours.Contains("1-2")) return 2;
+            if (hours.Contains("3-5") || hours.Contains("3") || hours.Contains("5")) return 3;
+            if (hours.Contains("6-8") || hours.Contains("6") || hours.Contains("8")) return 4;
+            if (hours.Contains("9") || hours.Contains("9+")) return 5;
+
+            return 3; // default/fallback
         }
     }
 }

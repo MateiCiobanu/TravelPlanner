@@ -269,8 +269,25 @@
 
   const activitiesByDay = {};
   itineraryData.dailySuggestions.forEach(day => {
-    activitiesByDay[day.dayNumber] = day.places.map(p => p.name);
-  });
+  activitiesByDay[day.dayNumber] = day.places.map(p => ({
+    name: p.name,
+    schedule: p.schedule,
+    todayHours: p.todayHours,
+    allHours: p.openingHours,
+    latitude: p.latitude,
+    longitude: p.longitude,
+    phoneIntl: p.internationalPhoneNumber || "",  // ✅ this must match DTO key
+    phoneNational: p.formattedPhoneNumber || "",  // ✅ this too
+    website: p.website || "",
+    category: p.category || ""
+  }));
+});
+
+  const getUsedPlaceIds = () =>
+    new Set(Object.values(activitiesByDay)
+      .flatMap(day => day)
+      .filter(Boolean)
+      .map(p => p.googlePlaceId));
 
   const activityInfo = {
   "Visit Colosseum": {
@@ -317,12 +334,31 @@ function renderDay() {
         }
       });
       wrapper.appendChild(addBtn);
-    } else {
+    } 
+    else {
       const span = createActivitySpan(activity);
       const deleteBtn = createDeleteButton(() => {
-        dayActivities[index] = null;
-        renderDay();
-      });
+      const deletedActivity = dayActivities[index];
+      const categoryToRefill = deletedActivity.category;
+      const timeSlot = deletedActivity.schedule;
+
+      // Replace deleted activity with a new one from same category
+      const usedIds = getUsedPlaceIds();
+      const pool = itineraryData.dailySuggestions
+        .flatMap(day => day.places)
+        .filter(p => p.category === categoryToRefill && !usedIds.has(p.googlePlaceId));
+
+      const newActivity = pool[Math.floor(Math.random() * pool.length)];
+
+      if (newActivity) {
+        newActivity.schedule = timeSlot;
+        dayActivities[index] = newActivity;
+      } else {
+        dayActivities[index] = null; // fallback if none available
+      }
+
+      renderDay();
+    });
 
       wrapper.appendChild(span);
       wrapper.appendChild(deleteBtn);
@@ -379,76 +415,72 @@ function createDeleteButton(onClick) {
 
 function createActivitySpan(activity) {
   const span = document.createElement("span");
-  span.textContent = activity;
+  span.textContent = `${activity.name} (${activity.schedule})`;
   span.style.cursor = "pointer";
-  span.onclick = () => showActivityInfo(activity);
+  span.onclick = () => {
+    showActivityInfo(activity);
+    updateMap(activity);  // 🗺️ update the map
+  };
   return span;
 }
 
 function showActivityInfo(activity) {
-  const info = activityInfo[activity];
-  if (!info) {
-    alert("No information available for this activity.");
-    return;
-  }
+  const safe = (value) => value && value.trim() !== "" ? value : null;
 
- const popup = document.createElement("div");
+  const popup = document.createElement("div");
 
-popup.innerHTML = `
-  <div id="popup-overlay" style="
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 9998;
-  "></div>
+  popup.innerHTML = `
+    <div id="popup-overlay" style="
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 9998;
+    "></div>
 
-  <div id="popup-content" style="
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: #ffffff;
-    color: #333;
-    padding: 1.5rem;
-    border-radius: 16px;
-    z-index: 9999;
-    width: 360px;
-    max-width: 90%;
-    font-family: 'Poppins', sans-serif;
-    text-shadow: none;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    opacity: 0;
-    transform: translate(-50%, -48%) scale(0.95);
-  ">
-    <h2 style="margin-bottom: 0.8rem; font-size: 1.3rem;">${activity}</h2>
-    <p style="margin: 0.3rem 0;"><strong>🕒 Hours:</strong> ${info.hours}</p>
-    <p style="margin: 0.3rem 0;"><strong>📞 Intl:</strong> ${info.phoneIntl}</p>
-    <p style="margin: 0.3rem 0;"><strong>📞 Local:</strong> ${info.phoneNational}</p>
-    <p style="margin: 0.3rem 0;"><strong>⭐ Rating:</strong> ${info.rating}</p>
-    <p style="margin: 0.6rem 0;">
-      <a href="${info.website}" target="_blank" style="color: #2482c8; text-decoration: none;">🌐 Website</a>
-    </p>
-    <p style="margin: 0.6rem 0;">
-      <a href="${info.wikipedia}" target="_blank" style="color: #2482c8; text-decoration: none;">📚 Wikipedia</a>
-    </p>
-  </div>
-`;
+    <div id="popup-content" style="
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      color: #333;
+      padding: 1.5rem;
+      border-radius: 16px;
+      z-index: 9999;
+      width: 360px;
+      max-width: 90%;
+      font-family: 'Poppins', sans-serif;
+      text-shadow: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 0;
+      transform: translate(-50%, -48%) scale(0.95);
+    ">
+      <h2 style="margin-bottom: 0.8rem; font-size: 1.3rem;">${activity.name}</h2>
+      ${Array.isArray(activity.allHours) && activity.allHours.length > 0 
+        ? `<div><strong>🕒 Weekly Hours:</strong><ul style="padding-left: 1.2rem; margin-top: 0.3rem;">${
+            activity.allHours.map(line => `<li style="margin-bottom: 2px;">${line}</li>`).join("")
+          }</ul></div>`
+        : ""
+      }
+      ${safe(activity.phoneIntl) ? `<p><strong>📞 Intl:</strong> ${activity.phoneIntl}</p>` : ""}
+      ${safe(activity.phoneNational) ? `<p><strong>📞 Local:</strong> ${activity.phoneNational}</p>` : ""}
+      ${safe(activity.website) ? `<p><a href="${activity.website}" target="_blank" style="color: #2482c8;">🌐 Website</a></p>` : ""}
+      ${activity.category?.toLowerCase().includes("museum") || activity.category?.toLowerCase().includes("art") || activity.category?.toLowerCase().includes("gallery") ? `<p><strong>🏛️ Type:</strong> Cultural</p>` : ""}
+    </div>
+  `;
 
-// Close when clicking the overlay
-popup.querySelector("#popup-overlay").addEventListener("click", () => {
-  document.body.removeChild(popup);
-});
+  popup.querySelector("#popup-overlay").addEventListener("click", () => {
+    document.body.removeChild(popup);
+  });
 
-document.body.appendChild(popup);
+  document.body.appendChild(popup);
 
-// Trigger smooth fade-in after append
-setTimeout(() => {
-  const content = popup.querySelector("#popup-content");
-  content.style.opacity = "1";
-  content.style.transform = "translate(-50%, -50%) scale(1)";
-}, 10);
-
+  setTimeout(() => {
+    const content = popup.querySelector("#popup-content");
+    content.style.opacity = "1";
+    content.style.transform = "translate(-50%, -50%) scale(1)";
+  }, 10);
 }
 
 
@@ -460,42 +492,131 @@ setTimeout(() => {
     renderDay();
   }
 
-  function saveItinerary() {
-  alert("Itinerary saved! (This would send data to the server)");
+  async function saveItinerary() {
+  const userId = localStorage.getItem("user_id");
+  const city = localStorage.getItem("itinerary_city");
+  const start = localStorage.getItem("itinerary_start");
+  const end = localStorage.getItem("itinerary_end");
+
+  const itineraryItems = [];
+
+  itineraryData.dailySuggestions.forEach(day => {
+    day.places.forEach(place => {
+      const [startTimeStr, endTimeStr] = place.schedule.split(" - ");
+      const startTime = `${startTimeStr.trim()}:00`;
+      const endTime = `${endTimeStr.trim()}:00`;
+      itineraryItems.push({
+        googlePlaceId: place.googlePlaceId,
+        placeName: place.name,
+        placeCategory: place.category,
+        dayNumber: day.dayNumber,
+        startTime: startTime,
+        endTime: endTime,
+        duration: 120
+      });
+    });
+  });
+
+  const body = {
+    userId: parseInt(userId),
+    destination: city,
+    startDate: start,
+    endDate: end,
+    itineraryItems: itineraryItems
+  };
+
+console.log("Saving trip with payload:", JSON.stringify(body, null, 2));
+
+  const response = await fetch("http://localhost:5192/api/trip/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+  const errorText = await response.text();
+
+  if (response.status === 409) {
+    alert("Trip has already been saved.");
+  } else {
+    alert("Failed to save itinerary.");
   }
+
+  console.error("Failed to save:", errorText);
+  return;
+}
+
+  if (response.ok) {
+    alert("Itinerary saved to database!");
+  } else {
+    alert("Failed to save itinerary.");
+    window.itinerarySaved = false; // allow retry
+    document.querySelector(".save-itinerary-button").disabled = false;
+  }
+}
 
   renderDay();
 
   const googlePlacesApiKey = "@Html.Raw(Model.GooglePlacesApiKey)";
-  function updateMap(destination) {
-  const encodedLocation = encodeURIComponent(destination);
-  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${googlePlacesApiKey}&q=${encodedLocation}&zoom=13`;
-  document.getElementById("dynamicMap").src = mapUrl;
+  function updateMap(activity) {
+  const lat = activity.latitude;
+  const lng = activity.longitude;
+  const name = encodeURIComponent(activity.name);
+
+  if (lat && lng) {
+    const mapUrl = `https://www.google.com/maps/embed/v1/search?key=${googlePlacesApiKey}&q=${name}&center=${lat},${lng}&zoom=16`;
+    document.getElementById("dynamicMap").src = mapUrl;
+  } else {
+    console.warn("No lat/lng for activity");
+  }
 }
 
 
 // Set map on page load
 const firstPlace = itineraryData?.dailySuggestions?.[0]?.places?.[0];
 if (firstPlace) {
-  const destination = firstPlace.address.split(",").slice(-1)[0].trim();
-  updateMap(destination);
+  updateMap(firstPlace);
 }
 
 
 
 window.onload = function () {
-    const city = localStorage.getItem("itinerary_city");
-    const start = localStorage.getItem("itinerary_start");
-    const end = localStorage.getItem("itinerary_end");
-    const travelerType = localStorage.getItem("traveler_type");
-    const people = JSON.parse(localStorage.getItem("itinerary_people") || "[]");
+  const city = localStorage.getItem("itinerary_city");
+  const start = localStorage.getItem("itinerary_start");
+  const end = localStorage.getItem("itinerary_end");
+  const travelerType = localStorage.getItem("traveler_type");
+  const people = JSON.parse(localStorage.getItem("itinerary_people") || "[]");
 
-    console.log("City:", city);
-    console.log("Start Date:", start);
-    console.log("End Date:", end);
-    console.log("Traveler Type:", travelerType);
-    console.log("People Emails:", people);
-  };
+  console.log("City:", city);
+  console.log("Start Date:", start);
+  console.log("End Date:", end);
+  console.log("Traveler Type:", travelerType);
+  console.log("People Emails:", people);
+
+
+  console.log("Activities and their Google Place IDs:");
+  itineraryData.dailySuggestions.forEach(day => {
+    console.log(`Day ${day.dayNumber}:`);
+    day.places.forEach(p => {
+      console.log(`  - ${p.name} → ${p.googlePlaceId}`);
+    });
+  });
+
+
+  console.log("== DEBUG itineraryData ==");
+itineraryData.dailySuggestions.forEach(day => {
+  console.log(`Day ${day.dayNumber}`);
+  day.places.forEach(p => {
+    console.log(`• ${p.name} (ID: ${p.googlePlaceId})`);
+    console.log(`   - Intl: ${p.internationalPhoneNumber}`);
+    console.log(`   - Local: ${p.formattedPhoneNumber}`);
+    console.log(`   - Website: ${p.website}`);
+    console.log(`   - Hours: ${p.openingHours?.join("; ")}`);
+  });
+});
+
+
+};
 
 
 </script>

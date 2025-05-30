@@ -409,6 +409,7 @@
         const end = document.getElementById("endDate").value;
         const people = document.getElementById("peopleInput").value;
         const messageBox = document.getElementById("errorMessage");
+        const quizAnswer = localStorage.getItem("quiz_3") || "";
 
         if (!city || !start || !end || !people) {
             messageBox.textContent = "Please complete all fields before creating the itinerary.";
@@ -444,12 +445,14 @@
         const peopleEmails = personInputs.map(input => input.value.trim());
         localStorage.setItem("itinerary_people", JSON.stringify(peopleEmails))
         localStorage.setItem("traveler_type", travelerType);
+        localStorage.setItem("itinerary_hours", quizAnswer); // Optional
 
         const requestBody = {
             destination: city,
             startDate: start,
             endDate: end,
-            travelerType: { typeName: travelerType }
+            travelerType: { typeName: travelerType },
+            estimatedHoursPerDay: quizAnswer
         };
 
         console.log("Traveler Type being sent:", travelerType);

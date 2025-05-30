@@ -65,6 +65,18 @@ namespace TravelPlanner.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<Trip?> GetTripByUserDestinationAndDatesAsync(int userId, string destination, DateTime startDate, DateTime endDate)
+        {
+            var startUtc = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            var endUtc = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+
+            return await _context.Trips.FirstOrDefaultAsync(t =>
+                t.UserId == userId &&
+                t.Destination == destination &&
+                t.StartDate == startUtc &&
+                t.EndDate == endUtc);
+        }
     }
 }
 
