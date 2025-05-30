@@ -15,10 +15,35 @@
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                  url("media/city11.jpeg") no-repeat center center fixed;
-      background-size: cover;
       color: white;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+     html, body {
+    height: 100%;
+    min-height: 100vh;
+    }
+    body {
+    margin: 0;
+    padding: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    display: flex;
+   flex-direction: column;
+   }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 0;
     }
 
     .sidebar {
@@ -33,6 +58,7 @@
       align-items: center;
       box-shadow: 3px 0 15px rgba(0,0,0,0.3);
       border-radius: 0 16px 16px 0;
+      z-index: 1;
     }
 
     .profile-box {
@@ -129,6 +155,8 @@
     .main {
       margin-left: 300px;
       padding: 3rem 2rem;
+      position: relative;
+      z-index: 1;
     }
 
     h3 {
@@ -209,6 +237,8 @@
   </style>
 </head>
 <body>
+  <div class="overlay"></div>
+
   <div class="sidebar">
     <div class="profile-box">
       <div class="avatar" id="initial">N</div>
@@ -237,64 +267,39 @@
   </div>
 
   <script>
+    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    const preloadImage = new Image();
+    preloadImage.src = randomImage;
+    preloadImage.onload = () => {
+      document.body.style.backgroundImage = `url('${randomImage}')`;
+    };
+
     console.log("MyTrips page loaded");
     
-    // Load user info
     const fname = localStorage.getItem("user_firstName") || "Name";
     const lname = localStorage.getItem("user_lastName") || "Surname";
     document.getElementById("name").textContent = `${fname} ${lname}`;
     document.getElementById("initial").textContent = fname.charAt(0).toUpperCase();
-      document.getElementById("usernameText").textContent = fname.toLowerCase();
+    document.getElementById("username").textContent = fname.toLowerCase();
 
     function loadTrips() {
-      console.log("loadTrips function called");
-      
-      try {
-        const loading = document.getElementById("loading");
-        const container = document.getElementById("tripsContainer");
-        const noTrips = document.getElementById("noTrips");
+      const loading = document.getElementById("loading");
+      const container = document.getElementById("tripsContainer");
+      const noTrips = document.getElementById("noTrips");
 
-        console.log("Elements found:", {loading, container, noTrips});
-        
-        // localStorage'dan trip'leri oku
-        const savedTripsStr = localStorage.getItem('savedTrips');
-        console.log("Raw savedTrips from localStorage:", savedTripsStr);
-        
-        const savedTrips = JSON.parse(savedTripsStr || '[]');
-        console.log("Parsed savedTrips:", savedTrips);
-        
-        // Loading'i gizle
-        if (loading) {
-          loading.style.display = "none";
-          console.log("Loading hidden");
-        }
-        
-        if (savedTrips.length === 0) {
-          console.log("No trips found, showing no-trips message");
-          if (noTrips) {
-            noTrips.style.display = "block";
-          }
-        } else {
-          console.log(`Displaying ${savedTrips.length} trips`);
-          savedTrips.forEach((trip, index) => {
-            console.log(`Creating trip element ${index}:`, trip);
-            const tripElement = createTripElement(trip);
-            if (container) {
-              container.appendChild(tripElement);
-            }
-          });
-          
-          if (noTrips) {
-            noTrips.style.display = "none";
-          }
-        }
+      const savedTripsStr = localStorage.getItem('savedTrips');
+      const savedTrips = JSON.parse(savedTripsStr || '[]');
 
-      } catch (error) {
-        console.error("Error in loadTrips:", error);
-        const loading = document.getElementById("loading");
-        if (loading) {
-          loading.textContent = "Error loading trips: " + error.message;
-        }
+      if (loading) loading.style.display = "none";
+      if (savedTrips.length === 0) {
+        if (noTrips) noTrips.style.display = "block";
+      } else {
+        savedTrips.forEach(trip => {
+          const tripElement = createTripElement(trip);
+          if (container) container.appendChild(tripElement);
+        });
+        if (noTrips) noTrips.style.display = "none";
       }
     }
 
@@ -303,20 +308,8 @@
       div.className = "trip";
       div.id = `trip-${trip.id}`;
       
-      // Tarih formatını güvenli hale getir
-      let startDate = "N/A";
-      let endDate = "N/A";
-      
-      try {
-        if (trip.startDate) {
-          startDate = new Date(trip.startDate).toLocaleDateString();
-        }
-        if (trip.endDate) {
-          endDate = new Date(trip.endDate).toLocaleDateString();
-        }
-      } catch (dateError) {
-        console.warn("Date parsing error:", dateError);
-      }
+      let startDate = trip.startDate ? new Date(trip.startDate).toLocaleDateString() : "N/A";
+      let endDate = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : "N/A";
       
       div.innerHTML = `
         <div class="trip-title">${trip.title || 'Untitled Trip'}</div>
@@ -332,30 +325,18 @@
     }
 
     function deleteTrip(id) {
-      const confirmDelete = confirm("Are you sure you want to delete this trip?");
-      if (confirmDelete) {
-        try {
-          // localStorage'dan sil
-          let savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
-          savedTrips = savedTrips.filter(trip => trip.id != id);
-          localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
-          
-          // UI'dan kaldır
-          const tripElement = document.getElementById(`trip-${id}`);
-          if (tripElement) {
-            tripElement.remove();
-          }
-          
-          alert("Trip deleted successfully.");
-          
-          // Eğer hiç trip kalmadıysa no-trips mesajını göster
-          if (savedTrips.length === 0) {
-            document.getElementById("noTrips").style.display = "block";
-          }
-          
-        } catch (error) {
-          console.error("Error deleting trip:", error);
-          alert("Error deleting trip.");
+      if (confirm("Are you sure you want to delete this trip?")) {
+        let savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
+        savedTrips = savedTrips.filter(trip => trip.id != id);
+        localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
+
+        const tripElement = document.getElementById(`trip-${id}`);
+        if (tripElement) tripElement.remove();
+
+        alert("Trip deleted successfully.");
+
+        if (savedTrips.length === 0) {
+          document.getElementById("noTrips").style.display = "block";
         }
       }
     }
@@ -365,7 +346,6 @@
     }
 
     function viewTrip(id) {
-      // Trip detaylarını göster
       const savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
       const trip = savedTrips.find(t => t.id == id);
       
@@ -397,17 +377,9 @@
       window.location.href = '../Account/Account';
     }
 
-    // Test localStorage
-    console.log("Current localStorage savedTrips:", localStorage.getItem('savedTrips'));
-    
-    // DOM yüklendikten sonra loadTrips çağır
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM loaded, calling loadTrips");
-        loadTrips();
-      });
+      document.addEventListener('DOMContentLoaded', loadTrips);
     } else {
-      console.log("DOM already loaded, calling loadTrips immediately");
       loadTrips();
     }
   </script>
