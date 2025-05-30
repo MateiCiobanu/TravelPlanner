@@ -1,4 +1,3 @@
-
 @page
 @model TravelPlanner.WebUI.Pages.IndexModel
 @{
@@ -244,7 +243,7 @@
       document.getElementById("infoSection").classList.remove("hidden");
       document.getElementById("revealBtn").classList.add("hidden");
       document.getElementById("homeBtn").classList.remove("hidden");
-
+      localStorage.setItem("traveler_type", userType);
       document.getElementById("type").textContent = `Your traveler type: ${userType}`;
       if (typeInfo[userType]) {
         document.getElementById("quote").textContent = `“${typeInfo[userType].quote}”`;
@@ -257,7 +256,7 @@
         });
         document.getElementById("description").textContent = typeInfo[userType].description;
       }
-            const email = localStorage.getItem("user_email");
+        const email = localStorage.getItem("user_email");
         fetch("http://localhost:5192/api/user/update", {
           method: "PUT",
           headers: {
@@ -277,7 +276,18 @@
           console.error("Error:", error);
         });
     }
-    
+     window.onload = function () {
+   const firstName = localStorage.getItem("user_firstName");
+    const lastName = localStorage.getItem("user_lastName");
+    const email = localStorage.getItem("user_email");
+    const travelerType = localStorage.getItem("traveler_type");
+
+    console.log("First Name:", firstName);
+    console.log("Last Name:", lastName);
+    console.log("Email:", email);
+    console.log("Traveler Type:", travelerType);
+
+  };
   </script>
 </body>
 </html>
