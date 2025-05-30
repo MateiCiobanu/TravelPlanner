@@ -8,5 +8,6 @@ namespace TravelPlanner.Domain.Interfaces
         Task<User> GetUserById(int id);
         Task<bool> CreateUser(User user);
         Task<bool> Save();
+        Task<User?> GetByEmailAsync(string email);
     }
 }

@@ -13,13 +13,10 @@ public class GooglePlacesService
   private readonly ILogger<ItinerarySuggestionService> _logger;
 
 
-    public GooglePlacesService(HttpClient httpClient, IConfiguration configuration
-)
+    public GooglePlacesService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _apiKey = configuration["GooglePlaces:ApiKey"]; 
-
-
     }
 
     public async Task<List<PlaceDto>> GetPlacesAsync(string category, string location)

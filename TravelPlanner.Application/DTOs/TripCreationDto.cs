@@ -1,14 +1,24 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TravelPlanner.Application.DTOs
 {
-    public class TripDto
+    public class TripCreationDto
     {
-        public int Id { get; set; }
+        [Required]
         public int UserId { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public required string Title { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public required string Destination { get; set; }
+
+        [Required]
         public DateTime StartDate { get; set; }
+
+        [Required]
         public DateTime EndDate { get; set; }
-        public required string Status { get; set; }
-        public required List<ItineraryItemDto> ItineraryItems { get; set; }
     }
 }

@@ -1,14 +1,14 @@
+
 namespace TravelPlanner.Application.DTOs
 {
-    public class TripDto
+    public class SaveTripRequestDto
     {
-        public int Id { get; set; }
         public int UserId { get; set; }
-        public required string Title { get; set; }
+        public string? Title { get; set; }
         public required string Destination { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public required string Status { get; set; }
-        public required List<ItineraryItemDto> ItineraryItems { get; set; }
+        public List<ItineraryItemDto> ItineraryItems { get; set; } = new();
+        public List<string> FriendEmails { get; set; } = new();
     }
 }

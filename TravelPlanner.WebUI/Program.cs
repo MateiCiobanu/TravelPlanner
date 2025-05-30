@@ -1,7 +1,16 @@
 using Microsoft.Extensions.FileProviders;
+using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
+builder.Services
+    .AddControllersWithViews()
+    .AddJsonOptions(opts => {
+        opts.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddRazorPages();
 
 builder.Services.AddHttpClient();

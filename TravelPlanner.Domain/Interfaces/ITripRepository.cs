@@ -14,5 +14,6 @@ namespace TravelPlanner.Domain.Interfaces
         Task<Trip> CreateAsync(Trip trip);
         Task<Trip> UpdateAsync(Trip trip);
         Task<bool> DeleteAsync(int id);
+        Task<Trip?> GetTripByUserDestinationAndDatesAsync(int userId, string destination, DateTime startDate, DateTime endDate);
     }
 }

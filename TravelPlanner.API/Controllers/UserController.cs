@@ -231,5 +231,27 @@ namespace TravelPlanner.API.Controllers
             return computedHash.SequenceEqual(passwordHash);
 
         }
+        [HttpGet("getByEmail/{email}")]
+        public async Task<IActionResult> GetUserByEmail(string email)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByEmail(email);
+                if (user == null)
+                    return NotFound("User not found.");
+
+                return Ok(new
+                {
+                    user.Id,
+                    user.Name,
+                    user.Email,
+                    TravelerType = new { TravelerTypeName = user.TravelerType }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

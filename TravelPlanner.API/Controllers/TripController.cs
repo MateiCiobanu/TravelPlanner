@@ -13,15 +13,17 @@ namespace TravelPlanner.API.Controllers
     // [Authorize] // Geçici olarak kaldırıldı
     public class TripController : ControllerBase
     {
-        private readonly ITripRepository _tripRepository;
-        private readonly IItineraryItemRepository _itineraryItemRepository;
+        private readonly ITripRepository _tripRepo;
+        private readonly IItineraryItemRepository _itineraryRepo;
         private readonly IMapper _mapper;
-
-        public TripController(ITripRepository tripRepository, IItineraryItemRepository itineraryItemRepository, IMapper mapper)
+        private readonly IUserRepository _userRepo;
+        public TripController(ITripRepository tripRepo, IItineraryItemRepository itineraryRepo, IMapper mapper, IUserRepository userRepo)
         {
-            _tripRepository = tripRepository;
-            _itineraryItemRepository = itineraryItemRepository;
+            _tripRepo = tripRepo;
+            _itineraryRepo = itineraryRepo;
             _mapper = mapper;
+            _userRepo = userRepo;
+
         }
 
         [HttpGet("user/{userId}")]
@@ -29,12 +31,12 @@ namespace TravelPlanner.API.Controllers
         {
             try
             {
-                var trips = await _tripRepository.GetByUserIdAsync(userId);
+                var trips = await _tripRepo.GetByUserIdAsync(userId);
                 var tripDtos = new List<TripDto>();
 
                 foreach (var trip in trips)
                 {
-                    var itineraryItems = await _itineraryItemRepository.GetByTripIdAsync(trip.Id);
+                    var itineraryItems = await _itineraryRepo.GetByTripIdAsync(trip.Id);
                     var tripDto = _mapper.Map<TripDto>(trip);
                     tripDto.ItineraryItems = _mapper.Map<List<ItineraryItemDto>>(itineraryItems);
                     tripDtos.Add(tripDto);
@@ -68,8 +70,8 @@ namespace TravelPlanner.API.Controllers
                 };
 
                 Console.WriteLine($"Creating trip: UserId={trip.UserId}, Title={trip.Title}, Destination={trip.Destination}");
-                
-                var createdTrip = await _tripRepository.CreateAsync(trip);
+
+                var createdTrip = await _tripRepo.CreateAsync(trip);
 
                 var result = new TripDto
                 {
@@ -82,7 +84,7 @@ namespace TravelPlanner.API.Controllers
                     Status = createdTrip.Status,
                     ItineraryItems = new List<ItineraryItemDto>()
                 };
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -106,10 +108,10 @@ namespace TravelPlanner.API.Controllers
 
                 var trip = _mapper.Map<Trip>(tripDto);
                 trip.Id = id;
-                
-                var updatedTrip = await _tripRepository.UpdateAsync(trip);
+
+                var updatedTrip = await _tripRepo.UpdateAsync(trip);
                 var result = _mapper.Map<TripDto>(updatedTrip);
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -123,7 +125,7 @@ namespace TravelPlanner.API.Controllers
         {
             try
             {
-                var success = await _tripRepository.DeleteAsync(id);
+                var success = await _tripRepo.DeleteAsync(id);
                 if (!success)
                     return NotFound();
 
@@ -148,10 +150,10 @@ namespace TravelPlanner.API.Controllers
                 {
                     item.TripId = tripId;
                 }
-                
-                var createdItems = await _itineraryItemRepository.AddRangeAsync(items);
+
+                var createdItems = await _itineraryRepo.AddRangeAsync(items);
                 var result = _mapper.Map<List<ItineraryItemDto>>(createdItems);
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -170,10 +172,10 @@ namespace TravelPlanner.API.Controllers
 
                 var item = _mapper.Map<ItineraryItem>(itemDto);
                 item.TripId = tripId;
-                
-                var createdItem = await _itineraryItemRepository.CreateAsync(item);
+
+                var createdItem = await _itineraryRepo.CreateAsync(item);
                 var result = _mapper.Map<ItineraryItemDto>(createdItem);
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -192,10 +194,10 @@ namespace TravelPlanner.API.Controllers
 
                 var item = _mapper.Map<ItineraryItem>(itemDto);
                 item.Id = itemId;
-                
-                var updatedItem = await _itineraryItemRepository.UpdateAsync(item);
+
+                var updatedItem = await _itineraryRepo.UpdateAsync(item);
                 var result = _mapper.Map<ItineraryItemDto>(updatedItem);
-                
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -209,7 +211,7 @@ namespace TravelPlanner.API.Controllers
         {
             try
             {
-                var success = await _itineraryItemRepository.DeleteAsync(itemId);
+                var success = await _itineraryRepo.DeleteAsync(itemId);
                 if (!success)
                     return NotFound();
 
@@ -219,6 +221,101 @@ namespace TravelPlanner.API.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        [HttpPost("save")]
+        public async Task<IActionResult> SaveTrip([FromBody] SaveTripRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join(" | ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                return BadRequest("Model validation failed: " + errors);
+            }
+
+            var existingTrip = await _tripRepo.GetTripByUserDestinationAndDatesAsync(
+                request.UserId,
+                request.Destination,
+                request.StartDate,
+                request.EndDate
+            );
+
+            if (existingTrip != null)
+            {
+                return Conflict("Trip already exists for this user with the same destination and dates.");
+            }
+
+ 
+            var newTrip = new Trip
+            {
+                UserId = request.UserId,
+                Title = request.Title ?? $"Trip to {request.Destination}",
+                Destination = request.Destination,
+                StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
+                EndDate = DateTime.SpecifyKind(request.EndDate, DateTimeKind.Utc),
+                Status = "Saved"
+            };
+
+            var createdTrip = await _tripRepo.CreateAsync(newTrip);
+
+            var items = request.ItineraryItems.Select(item => new ItineraryItem
+            {
+                TripId = createdTrip.Id,
+                GooglePlaceId = item.GooglePlaceId,
+                PlaceName = item.PlaceName,
+                PlaceCategory = item.PlaceCategory,
+                DayNumber = item.DayNumber,
+                StartTime = item.StartTime,
+                EndTime = item.EndTime,
+                Duration = item.Duration ?? 0
+            });
+
+            await _itineraryRepo.AddRangeAsync(items);
+
+         
+            foreach (var email in request.FriendEmails.Distinct())
+            {
+                var friend = await _userRepo.GetByEmailAsync(email);
+                if (friend == null) continue;
+
+                var friendExistingTrip = await _tripRepo.GetTripByUserDestinationAndDatesAsync(
+                    friend.Id,
+                    request.Destination,
+                    request.StartDate,
+                    request.EndDate
+                );
+
+                if (friendExistingTrip != null) continue; 
+
+                var friendTrip = new Trip
+                {
+                    UserId = friend.Id,
+                    Title = request.Title ?? $"Trip to {request.Destination}",
+                    Destination = request.Destination,
+                    StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
+                    EndDate = DateTime.SpecifyKind(request.EndDate, DateTimeKind.Utc),
+                    Status = "Saved"
+                };
+
+                var savedTrip = await _tripRepo.CreateAsync(friendTrip);
+
+                var clonedItems = request.ItineraryItems.Select(item => new ItineraryItem
+                {
+                    TripId = savedTrip.Id,
+                    GooglePlaceId = item.GooglePlaceId,
+                    PlaceName = item.PlaceName,
+                    PlaceCategory = item.PlaceCategory,
+                    DayNumber = item.DayNumber,
+                    StartTime = item.StartTime,
+                    EndTime = item.EndTime,
+                    Duration = item.Duration ?? 0
+                });
+
+                await _itineraryRepo.AddRangeAsync(clonedItems);
+            }
+
+            return Ok(new { success = true, tripId = createdTrip.Id });
         }
     }
 }
