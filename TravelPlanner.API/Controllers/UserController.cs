@@ -253,13 +253,5 @@ namespace TravelPlanner.API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-      [HttpGet("{id}")]
-      public async Task<IActionResult> GetUserById(int id)
-       {
-      var user = await _userRepository.GetUserById(id);
-      if (user == null)
-        return NotFound();
-       return Ok(new { Email = user.Email });
-      }
     }
 }
