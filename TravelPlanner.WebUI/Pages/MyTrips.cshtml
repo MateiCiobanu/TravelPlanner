@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "My Trips";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,29 +18,15 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-     html, body {
-    height: 100%;
-    min-height: 100vh;
-    }
-    body {
-    margin: 0;
-    padding: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 100vh;
-    display: flex;
-   flex-direction: column;
-   }
 
     .overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background-color: rgba(0, 0, 0, 0.6);
       z-index: 0;
     }
@@ -96,7 +81,6 @@
     .settings {
       margin-top: auto;
       width: 100%;
-      position: relative;
     }
 
     .settings-toggle {
@@ -133,8 +117,8 @@
       color: #333;
       border-radius: 8px;
       margin: 0.8rem 0;
-      overflow: hidden;
       list-style-type: none;
+      padding: 0;
     }
 
     .settings-list.active {
@@ -146,10 +130,11 @@
       font-size: 0.95rem;
       cursor: pointer;
       transition: background 0.2s;
+      color: white;
     }
 
     .settings-list li:hover {
-      background-color: #f1f1f1;
+      background-color: rgba(255, 255, 255, 0.1);
     }
 
     .main {
@@ -157,6 +142,11 @@
       padding: 3rem 2rem;
       position: relative;
       z-index: 1;
+    }
+
+    .content-wrapper {
+      max-width: 700px;
+      width: 100%;
     }
 
     h3 {
@@ -173,7 +163,6 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: white;
-      position: relative;
     }
 
     .trip-title {
@@ -195,32 +184,14 @@
       transition: background 0.3s ease;
     }
 
-    .edit-btn {
-      background-color: #4fc3f7;
-      color: white;
-    }
+    .edit-btn { background-color: #4fc3f7; color: white; }
+    .edit-btn:hover { background-color: #039be5; }
 
-    .edit-btn:hover {
-      background-color: #039be5;
-    }
+    .delete-btn { background-color: #ef5350; color: white; }
+    .delete-btn:hover { background-color: #d32f2f; }
 
-    .delete-btn {
-      background-color: #ef5350;
-      color: white;
-    }
-
-    .delete-btn:hover {
-      background-color: #d32f2f;
-    }
-
-    .view-btn {
-      background-color: #81c784;
-      color: white;
-    }
-
-    .view-btn:hover {
-      background-color: #388e3c;
-    }
+    .view-btn { background-color: #81c784; color: white; }
+    .view-btn:hover { background-color: #388e3c; }
 
     .no-trips {
       text-align: center;
@@ -241,9 +212,8 @@
 
   <div class="sidebar">
     <div class="profile-box">
-      <div class="avatar" id="initial">N</div>
-      <h2 id="name">Name Surname</h2>
-      <p id="username">user</p>
+      <div class="avatar" id="initial">U</div>
+      <h2 id="name">User Name</h2>
     </div>
 
     <div class="settings">
@@ -256,18 +226,25 @@
   </div>
 
   <div class="main">
-    <h3>My Trips</h3>
-    
-    <div id="loading" class="loading">Loading your trips...</div>
-    <div id="tripsContainer"></div>
-    <div id="noTrips" class="no-trips" style="display: none;">
-      You haven't created any trips yet. <br>
-      <a href="../Homepage" style="color: #4fc3f7;">Create your first trip!</a>
+    <div class="content-wrapper">
+      <h3>My Trips</h3>
+      <div id="loading" class="loading">Loading your trips...</div>
+      <div id="tripsContainer"></div>
+      <div id="noTrips" class="no-trips" style="display: none;">
+        You haven't created any trips yet. <br />
+        <a href="../Homepage" style="color: #4fc3f7;">Create your first trip!</a>
+      </div>
     </div>
   </div>
 
   <script>
-    const images = Array.from({ length: 30 }, (_, i) => `media/bg${i + 1}.jpg`);
+    const fname = localStorage.getItem("user_firstName") || "User";
+    const lname = localStorage.getItem("user_lastName") || "Name";
+    document.getElementById("name").textContent = `${fname} ${lname}`;
+    document.getElementById("initial").textContent = fname.charAt(0).toUpperCase();
+
+
+    const images = Array.from({ length: 30 }, (_, i) => `../media/bg${i + 1}.jpg`);
     const randomImage = images[Math.floor(Math.random() * images.length)];
     const preloadImage = new Image();
     preloadImage.src = randomImage;
@@ -275,31 +252,30 @@
       document.body.style.backgroundImage = `url('${randomImage}')`;
     };
 
-    console.log("MyTrips page loaded");
-    
-    const fname = localStorage.getItem("user_firstName") || "Name";
-    const lname = localStorage.getItem("user_lastName") || "Surname";
-    document.getElementById("name").textContent = `${fname} ${lname}`;
-    document.getElementById("initial").textContent = fname.charAt(0).toUpperCase();
-    document.getElementById("username").textContent = fname.toLowerCase();
+    async function loadTripsFromAPI() {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) return;
 
-    function loadTrips() {
-      const loading = document.getElementById("loading");
-      const container = document.getElementById("tripsContainer");
-      const noTrips = document.getElementById("noTrips");
+      try {
+        const response = await fetch(`http://localhost:5192/api/trip/user/${userId}`);
+        const trips = await response.json();
 
-      const savedTripsStr = localStorage.getItem('savedTrips');
-      const savedTrips = JSON.parse(savedTripsStr || '[]');
+        const container = document.getElementById("tripsContainer");
+        const loading = document.getElementById("loading");
+        const noTrips = document.getElementById("noTrips");
 
-      if (loading) loading.style.display = "none";
-      if (savedTrips.length === 0) {
-        if (noTrips) noTrips.style.display = "block";
-      } else {
-        savedTrips.forEach(trip => {
-          const tripElement = createTripElement(trip);
-          if (container) container.appendChild(tripElement);
-        });
-        if (noTrips) noTrips.style.display = "none";
+        if (loading) loading.style.display = "none";
+
+        if (trips.length === 0) {
+          noTrips.style.display = "block";
+        } else {
+          trips.forEach(trip => {
+            const element = createTripElement(trip);
+            container.appendChild(element);
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load trips:", error);
       }
     }
 
@@ -307,62 +283,23 @@
       const div = document.createElement("div");
       div.className = "trip";
       div.id = `trip-${trip.id}`;
-      
-      let startDate = trip.startDate ? new Date(trip.startDate).toLocaleDateString() : "N/A";
-      let endDate = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : "N/A";
-      
+
+      let start = trip.startDate ? new Date(trip.startDate).toLocaleDateString() : "N/A";
+      let end = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : "N/A";
+
       div.innerHTML = `
         <div class="trip-title">${trip.title || 'Untitled Trip'}</div>
-        <p class="trip-details">${trip.destination || 'Unknown Destination'} – ${startDate} to ${endDate}</p>
+        <p class="trip-details">${trip.destination} – ${start} to ${end}</p>
         <div class="trip-actions">
-          <button class="edit-btn" onclick="editTrip(${trip.id})">Edit</button>
-          <button class="delete-btn" onclick="deleteTrip(${trip.id})">Delete</button>
-          <button class="view-btn" onclick="viewTrip(${trip.id})">View</button>
-        </div>
-      `;
-      
+
+         
+        </div>`;
       return div;
     }
 
-    function deleteTrip(id) {
-      if (confirm("Are you sure you want to delete this trip?")) {
-        let savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
-        savedTrips = savedTrips.filter(trip => trip.id != id);
-        localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
-
-        const tripElement = document.getElementById(`trip-${id}`);
-        if (tripElement) tripElement.remove();
-
-        alert("Trip deleted successfully.");
-
-        if (savedTrips.length === 0) {
-          document.getElementById("noTrips").style.display = "block";
-        }
-      }
-    }
-
-    function editTrip(id) {
-      alert(`Edit functionality for trip ${id} - Not implemented yet`);
-    }
-
-    function viewTrip(id) {
-      const savedTrips = JSON.parse(localStorage.getItem('savedTrips') || '[]');
-      const trip = savedTrips.find(t => t.id == id);
-      
-      if (trip) {
-        let details = `Trip: ${trip.title}\nDestination: ${trip.destination}\nDates: ${trip.startDate} to ${trip.endDate}\n\nItinerary:\n`;
-        
-        if (trip.itineraryItems && trip.itineraryItems.length > 0) {
-          trip.itineraryItems.forEach(item => {
-            details += `Day ${item.dayNumber}: ${item.placeName} (${item.startTime} - ${item.endTime})\n`;
-          });
-        } else {
-          details += "No specific itinerary items saved.";
-        }
-        
-        alert(details);
-      }
-    }
+    function editTrip(id) { alert(`Edit trip ${id}`); }
+    function deleteTrip(id) { alert(`Delete trip ${id}`); }
+    function viewTrip(id) { alert(`View trip ${id}`); }
 
     function toggleSettings() {
       document.getElementById("settingsMenu").classList.toggle("active");
@@ -378,9 +315,9 @@
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadTrips);
+      document.addEventListener('DOMContentLoaded', loadTripsFromAPI);
     } else {
-      loadTrips();
+      loadTripsFromAPI();
     }
   </script>
 </body>
