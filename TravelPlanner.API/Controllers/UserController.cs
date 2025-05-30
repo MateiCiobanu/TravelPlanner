@@ -134,7 +134,57 @@ namespace TravelPlanner.API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+         [HttpGet("getByEmail/{email}")]
+        public async Task<IActionResult> GetUserByEmail(string email)
+        {
+            try
+            {
+                var user = await _userRepository.GetUserByEmail(email);
+                if (user == null)
+                    return NotFound("User not found.");
 
+                return Ok(new
+                {
+                    user.Id,
+                    user.Name,
+                    user.Email,
+                    user.TravelerType
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDTO userDto)
+        {
+            try
+            {
+                if(userDto == null)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = await _userRepository.GetUserByEmail(userDto.Email);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+                user.TravelerType = userDto.TravelerType;
+                if (!await _userRepository.Save())
+                {
+                    ModelState.AddModelError("", "Something went wrong while updating user");
+                    return StatusCode(500, ModelState);
+                }
+                return Ok("Successfully updated");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+      
         [HttpPut("update-profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
         {
